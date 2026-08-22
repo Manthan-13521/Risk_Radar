@@ -71,13 +71,13 @@ function isActive(pathname: string | null, href: string): boolean {
 
 function NavContent({ pathname }: { pathname: string | null }) {
   return (
-    <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+    <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-6">
       {NAV.map((sec) => (
         <div key={sec.title}>
-          <div className="text-[9px] font-bold uppercase tracking-[0.18em] px-2 mb-2" style={{ color: '#6F6664' }}>
+          <div className="text-[11px] font-extrabold uppercase tracking-[0.2em] px-2.5 mb-2.5" style={{ color: '#554B49' }}>
             {sec.title}
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {sec.items.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -85,18 +85,18 @@ function NavContent({ pathname }: { pathname: string | null }) {
                   key={item.href}
                   href={item.href}
                   prefetch={true}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                  className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-[15px] font-bold tracking-tight transition-all"
                   style={{
                     background: active ? '#990011' : 'transparent',
                     color: active ? '#ffffff' : item.isPrimary ? '#990011' : '#111111',
                   }}
                 >
-                  <span className="text-sm w-4 text-center shrink-0 font-mono">{item.icon}</span>
+                  <span className="text-base w-5 text-center shrink-0 font-mono font-extrabold">{item.icon}</span>
                   <span className="truncate flex-1">{item.label}</span>
                   {item.isPrimary && !active && (
                     <span
-                      className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase"
-                      style={{ background: 'rgba(153,0,17,0.1)', color: '#990011' }}
+                      className="text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider"
+                      style={{ background: 'rgba(153,0,17,0.12)', color: '#990011' }}
                     >
                       SCAN
                     </span>
@@ -142,7 +142,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#FCF6F5' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: '#ECE6E2' }}>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       {/* Mobile backdrop */}
@@ -159,25 +159,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         className={`fixed top-0 left-0 bottom-0 w-72 z-50 flex flex-col border-r transition-transform duration-200 md:hidden ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
-        style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+        style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
       >
-        <div className="h-14 flex items-center justify-between px-5 border-b" style={{ borderColor: '#D5C8C5' }}>
-          <div className="flex items-center gap-2.5">
-            <RiskRadarLogo size={30} />
+        <div className="h-16 flex items-center justify-between px-5 border-b" style={{ borderColor: '#C4B5B0' }}>
+          <div className="flex items-center gap-3">
+            <RiskRadarLogo size={32} />
             <div>
-              <div className="font-extrabold text-sm tracking-tight" style={{ color: '#111111' }}>Risk_Radar</div>
-              <div className="text-[9px] uppercase tracking-widest" style={{ color: '#6F6664' }}>Digital Immune System</div>
+              <div className="font-extrabold text-base tracking-tight" style={{ color: '#111111' }}>Risk_Radar</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#554B49' }}>Digital Immune System</div>
             </div>
           </div>
-          <button onClick={() => setDrawerOpen(false)} className="p-1.5 rounded-lg" style={{ color: '#6F6664' }}>✕</button>
+          <button onClick={() => setDrawerOpen(false)} className="p-1.5 rounded-lg" style={{ color: '#554B49' }}>✕</button>
         </div>
         <NavContent pathname={pathname} />
-        <div className="p-3 border-t" style={{ borderColor: '#D5C8C5', background: '#F0E8E6' }}>
-          <div className="flex items-center gap-2.5 px-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
+        <div className="p-4 border-t" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
             <div>
-              <div className="text-xs font-bold" style={{ color: '#111111' }}>Manthan Jaiswal</div>
-              <div className="flex items-center gap-1 text-[10px]" style={{ color: '#176B52' }}>
+              <div className="text-sm font-bold" style={{ color: '#111111' }}>Manthan Jaiswal</div>
+              <div className="flex items-center gap-1 text-[11px] font-bold" style={{ color: '#176B52' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
                 <span>SYSTEM OPERATIONAL</span>
               </div>
@@ -188,25 +188,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop Sidebar */}
       <aside
-        className="hidden md:flex flex-col w-64 h-full border-r shrink-0"
-        style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+        className="hidden md:flex flex-col w-72 h-full border-r shrink-0"
+        style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
       >
-        <div className="h-14 flex items-center gap-3 px-5 border-b shrink-0" style={{ borderColor: '#D5C8C5' }}>
-          <RiskRadarLogo size={30} className="shrink-0" />
+        <div className="h-16 flex items-center gap-3 px-6 border-b shrink-0" style={{ borderColor: '#C4B5B0' }}>
+          <RiskRadarLogo size={34} className="shrink-0" />
           <div className="min-w-0">
-            <div className="font-extrabold text-sm tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
-            <div className="text-[9px] uppercase tracking-widest truncate" style={{ color: '#6F6664' }}>Digital Immune System</div>
+            <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: '#554B49' }}>Digital Immune System</div>
           </div>
         </div>
 
         <NavContent pathname={pathname} />
 
-        <div className="p-3 border-t shrink-0" style={{ borderColor: '#D5C8C5', background: '#F0E8E6' }}>
-          <div className="flex items-center gap-2.5 px-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
+        <div className="p-4 border-t shrink-0" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
             <div className="min-w-0">
-              <div className="text-xs font-bold truncate" style={{ color: '#111111' }}>Manthan Jaiswal</div>
-              <div className="flex items-center gap-1 text-[10px]" style={{ color: '#176B52' }}>
+              <div className="text-sm font-bold truncate" style={{ color: '#111111' }}>Manthan Jaiswal</div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold" style={{ color: '#176B52' }}>
                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
                 <span>SYSTEM OPERATIONAL</span>
               </div>
@@ -218,12 +218,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-14 shrink-0 border-b flex items-center justify-between px-4 sm:px-6 gap-3" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+        <header className="h-16 shrink-0 border-b flex items-center justify-between px-5 sm:px-8 gap-4" style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setDrawerOpen(true)}
               className="md:hidden p-1.5 rounded-lg"
-              style={{ color: '#6F6664' }}
+              style={{ color: '#554B49' }}
               aria-label="Open navigation"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -231,42 +231,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </svg>
             </button>
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>Risk_Radar</div>
-              <div className="text-sm font-bold leading-tight" style={{ color: '#111111' }}>{getTitle()}</div>
+              <div className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#554B49' }}>Risk_Radar</div>
+              <div className="text-base font-extrabold leading-tight" style={{ color: '#111111' }}>{getTitle()}</div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Subsystem status */}
-            <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-lg border text-[11px] font-mono" style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#6F6664' }}>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: '#176B52' }} />AI</span>
-              <span style={{ color: '#D5C8C5' }}>·</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: '#176B52' }} />DB</span>
-              <span style={{ color: '#D5C8C5' }}>·</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full" style={{ background: '#176B52' }} />Voice</span>
+            <div className="hidden lg:flex items-center gap-3 px-3.5 py-2 rounded-xl border text-xs font-mono font-bold" style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#176B52' }} />AI</span>
+              <span style={{ color: '#C4B5B0' }}>·</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#176B52' }} />DB</span>
+              <span style={{ color: '#C4B5B0' }}>·</span>
+              <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#176B52' }} />Voice</span>
             </div>
 
             {/* Search */}
             <button
               onClick={() => setCmdOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition"
-              style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#6F6664' }}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold transition hover:bg-white/40"
+              style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
             >
               <span>⌕</span>
               <span className="hidden sm:inline" style={{ color: '#111111' }}>Search</span>
-              <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded border" style={{ background: '#E7DEDC', borderColor: '#D5C8C5', color: '#6F6664' }}>⌘K</kbd>
+              <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded border" style={{ background: '#D3C9C5', borderColor: '#C4B5B0', color: '#554B49' }}>⌘K</kbd>
             </button>
 
             {/* Live clock */}
-            <div className="hidden sm:flex items-center px-2.5 py-1.5 rounded-lg border text-xs font-mono font-bold" style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#990011' }}>
+            <div className="hidden sm:flex items-center px-3 py-2 rounded-xl border text-xs font-mono font-extrabold" style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#990011' }}>
               {timeString}
             </div>
 
             {/* Incidents bell */}
             <Link
               href="/incidents"
-              className="p-2 rounded-lg border transition"
-              style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#6F6664' }}
+              className="p-2.5 rounded-xl border transition hover:bg-white/40"
+              style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
               title="Incidents"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -276,7 +276,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto" style={{ background: '#FCF6F5' }}>
+        <main className="flex-1 overflow-y-auto" style={{ background: '#ECE6E2' }}>
           {children}
         </main>
       </div>

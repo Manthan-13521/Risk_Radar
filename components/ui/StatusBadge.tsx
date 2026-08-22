@@ -6,17 +6,17 @@ export function StatusBadge({
   className?: string;
 }) {
   const map: Record<string, { bg: string; color: string; border: string }> = {
-    safe: { bg: 'rgba(23,107,82,0.1)', color: '#176B52', border: 'rgba(23,107,82,0.3)' },
-    suspicious: { bg: 'rgba(184,106,0,0.1)', color: '#B86A00', border: 'rgba(184,106,0,0.3)' },
-    dangerous: { bg: 'rgba(153,0,17,0.1)', color: '#990011', border: 'rgba(153,0,17,0.3)' },
-    critical: { bg: 'rgba(118,0,13,0.12)', color: '#76000D', border: 'rgba(118,0,13,0.4)' },
+    safe: { bg: 'rgba(23,107,82,0.12)', color: '#176B52', border: 'rgba(23,107,82,0.3)' },
+    suspicious: { bg: 'rgba(184,106,0,0.12)', color: '#B86A00', border: 'rgba(184,106,0,0.3)' },
+    dangerous: { bg: 'rgba(153,0,17,0.12)', color: '#990011', border: 'rgba(153,0,17,0.3)' },
+    critical: { bg: 'rgba(118,0,13,0.14)', color: '#76000D', border: 'rgba(118,0,13,0.45)' },
   };
 
-  const style = map[classification] ?? { bg: '#E7DEDC', color: '#6F6664', border: '#D5C8C5' };
+  const style = map[classification] ?? { bg: '#D3C9C5', color: '#554B49', border: '#C4B5B0' };
 
   return (
     <span
-      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border inline-flex items-center gap-1.5 ${className}`}
+      className={`text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded border inline-flex items-center gap-1.5 shadow-xs ${className}`}
       style={{ background: style.bg, color: style.color, borderColor: style.border }}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current" />

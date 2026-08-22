@@ -38,7 +38,7 @@ export function PolicyToggle({
       onClick={toggle}
       disabled={loading}
       className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-      style={{ background: enabled ? '#990011' : '#D5C8C5' }}
+      style={{ background: enabled ? '#990011' : '#C4B5B0' }}
     >
       <span
         className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
@@ -102,7 +102,7 @@ export function AddPolicyModal() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 text-xs font-bold text-white rounded-xl transition hover:opacity-90"
+        className="px-4 py-2 text-xs font-extrabold text-white rounded-xl transition hover:opacity-90 shadow-sm"
         style={{ background: '#990011' }}
       >
         + Add Policy
@@ -117,55 +117,55 @@ export function AddPolicyModal() {
     >
       <div
         className="rounded-2xl border p-6 max-w-md w-full space-y-4 shadow-2xl"
-        style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+        style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
       >
-        <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: '#D5C8C5' }}>
+        <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: '#C4B5B0' }}>
           <h3 className="text-sm font-extrabold uppercase" style={{ color: '#111111' }}>Create Security Policy</h3>
-          <button onClick={() => setOpen(false)} className="p-1 rounded text-xs" style={{ color: '#6F6664' }}>
+          <button onClick={() => setOpen(false)} className="p-1 rounded text-xs font-bold" style={{ color: '#554B49' }}>
             ✕
           </button>
         </div>
 
         {error && (
-          <div className="p-2.5 rounded-lg text-xs" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
+          <div className="p-2.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Policy Name</label>
+            <label className="block font-bold mb-1" style={{ color: '#554B49' }}>Policy Name</label>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl p-2.5 border"
-              style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111', outline: 'none' }}
+              className="w-full rounded-xl p-2.5 border font-medium"
+              style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111', outline: 'none' }}
               placeholder="e.g. Domain Reputation Guard"
             />
           </div>
 
           <div>
-            <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Description</label>
+            <label className="block font-bold mb-1" style={{ color: '#554B49' }}>Description</label>
             <textarea
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full rounded-xl p-2.5 border resize-y"
-              style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111', outline: 'none' }}
+              className="w-full rounded-xl p-2.5 border resize-y font-medium"
+              style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111', outline: 'none' }}
               placeholder="What this policy guards against..."
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Input Target</label>
+              <label className="block font-bold mb-1" style={{ color: '#554B49' }}>Input Target</label>
               <select
                 value={inputType}
                 onChange={(e) => setInputType(e.target.value as 'url' | 'message' | 'file' | 'any')}
-                className="w-full rounded-xl p-2.5 border"
-                style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
+                className="w-full rounded-xl p-2.5 border font-medium"
+                style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
               >
                 <option value="url">URL</option>
                 <option value="message">Message</option>
@@ -175,12 +175,12 @@ export function AddPolicyModal() {
             </div>
 
             <div>
-              <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Enforced Action</label>
+              <label className="block font-bold mb-1" style={{ color: '#554B49' }}>Enforced Action</label>
               <select
                 value={action}
                 onChange={(e) => setAction(e.target.value as 'allow' | 'warn' | 'quarantine' | 'block')}
-                className="w-full rounded-xl p-2.5 border"
-                style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
+                className="w-full rounded-xl p-2.5 border font-medium"
+                style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
               >
                 <option value="warn">Warn</option>
                 <option value="quarantine">Quarantine</option>
@@ -192,27 +192,27 @@ export function AddPolicyModal() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Min Risk Floor (0-100)</label>
+              <label className="block font-bold mb-1" style={{ color: '#554B49' }}>Min Risk Floor (0-100)</label>
               <input
                 type="number"
                 min={0}
                 max={100}
                 value={minimumRisk}
                 onChange={(e) => setMinimumRisk(Number(e.target.value))}
-                className="w-full rounded-xl p-2.5 border"
-                style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
+                className="w-full rounded-xl p-2.5 border font-bold"
+                style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
               />
             </div>
             <div>
-              <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Priority (1 = Highest)</label>
+              <label className="block font-bold mb-1" style={{ color: '#554B49' }}>Priority (1 = Highest)</label>
               <input
                 type="number"
                 min={1}
                 max={100}
                 value={priority}
                 onChange={(e) => setPriority(Number(e.target.value))}
-                className="w-full rounded-xl p-2.5 border"
-                style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
+                className="w-full rounded-xl p-2.5 border font-bold"
+                style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
               />
             </div>
           </div>
@@ -222,14 +222,14 @@ export function AddPolicyModal() {
               type="button"
               onClick={() => setOpen(false)}
               className="px-4 py-2 rounded-xl font-bold border"
-              style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#111111' }}
+              style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#111111' }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 rounded-xl text-white font-bold transition hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-white font-extrabold transition hover:opacity-90 disabled:opacity-50 shadow-sm"
               style={{ background: '#990011' }}
             >
               {loading ? 'Creating...' : 'Save Policy'}

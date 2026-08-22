@@ -38,9 +38,9 @@ export function IncidentActions({
       <button
         onClick={() => handleUpdate('investigating', 'Analyst actively investigating')}
         disabled={loading || status === 'investigating'}
-        className="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 border"
+        className="px-3.5 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 border shadow-xs"
         style={{
-          background: status === 'investigating' ? '#B86A00' : '#FCF6F5',
+          background: status === 'investigating' ? '#B86A00' : '#ECE6E2',
           color: status === 'investigating' ? '#ffffff' : '#B86A00',
           borderColor: '#B86A00',
         }}
@@ -50,9 +50,9 @@ export function IncidentActions({
       <button
         onClick={() => handleUpdate('contained', 'Threat simulated quarantine enacted')}
         disabled={loading || status === 'contained'}
-        className="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 border"
+        className="px-3.5 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 border shadow-xs"
         style={{
-          background: status === 'contained' ? '#990011' : '#FCF6F5',
+          background: status === 'contained' ? '#990011' : '#ECE6E2',
           color: status === 'contained' ? '#ffffff' : '#990011',
           borderColor: '#990011',
         }}
@@ -62,9 +62,9 @@ export function IncidentActions({
       <button
         onClick={() => handleUpdate('resolved', 'Analyst marked incident as remediated')}
         disabled={loading || status === 'resolved'}
-        className="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 border"
+        className="px-3.5 py-2 rounded-xl text-xs font-bold transition disabled:opacity-50 border shadow-xs"
         style={{
-          background: status === 'resolved' ? '#176B52' : '#FCF6F5',
+          background: status === 'resolved' ? '#176B52' : '#ECE6E2',
           color: status === 'resolved' ? '#ffffff' : '#176B52',
           borderColor: '#176B52',
         }}

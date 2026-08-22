@@ -72,7 +72,7 @@ export default function InvestigateForm({
     return (
       <form onSubmit={handleSubmit} className="space-y-3">
         {error && (
-          <div className="p-2.5 rounded-lg text-xs" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
+          <div className="p-2.5 rounded-xl text-xs font-bold" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
             {error}
           </div>
         )}
@@ -81,20 +81,20 @@ export default function InvestigateForm({
             name="content" value={content} onChange={e => setContent(e.target.value)}
             placeholder="Paste suspicious URL, message or address..."
             disabled={loading}
-            className="flex-1 px-4 py-3 rounded-xl text-sm font-sans"
-            style={{ background: '#FCF6F5', border: '1.5px solid #D5C8C5', color: '#111111', outline: 'none' }}
+            className="flex-1 px-4 py-3.5 rounded-xl text-sm font-sans font-medium"
+            style={{ background: '#ECE6E2', border: '1.5px solid #C4B5B0', color: '#111111', outline: 'none' }}
           />
           <input type="hidden" name="type" value="message" />
           <button
             type="submit" disabled={loading || !content.trim()}
-            className="px-5 py-3 rounded-xl text-sm font-bold text-white shrink-0"
-            style={{ background: loading || !content.trim() ? '#D5C8C5' : '#990011', color: loading || !content.trim() ? '#6F6664' : '#fff' }}
+            className="px-6 py-3.5 rounded-xl text-sm font-extrabold text-white shrink-0 transition hover:opacity-90"
+            style={{ background: loading || !content.trim() ? '#C4B5B0' : '#990011', color: loading || !content.trim() ? '#554B49' : '#fff' }}
           >
             {loading ? 'Scanning...' : 'Investigate →'}
           </button>
         </div>
         {loading && (
-          <div className="rounded-lg p-3 text-xs font-mono" style={{ background: 'rgba(153,0,17,0.06)', border: '1px solid rgba(153,0,17,0.15)', color: '#990011' }}>
+          <div className="rounded-xl p-3 text-xs font-mono font-bold" style={{ background: 'rgba(153,0,17,0.06)', border: '1px solid rgba(153,0,17,0.15)', color: '#990011' }}>
             INVESTIGATION IN PROGRESS · {STEPS[Math.min(loadingStep, STEPS.length - 1)]}
           </div>
         )}
@@ -105,26 +105,26 @@ export default function InvestigateForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="p-3 rounded-lg text-xs" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
+        <div className="p-3.5 rounded-xl text-xs font-bold" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
           {error}
         </div>
       )}
 
       {/* Type selector */}
-      <div className="flex gap-1.5 p-1 rounded-xl border w-fit" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+      <div className="flex gap-1.5 p-1 rounded-xl border w-fit" style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}>
         <button
           type="button"
           onClick={() => { setInputType('message'); setFileName(null); }}
-          className="px-4 py-2 rounded-lg text-xs font-bold transition"
-          style={inputType === 'message' ? { background: '#990011', color: '#fff' } : { color: '#6F6664' }}
+          className="px-4 py-2 rounded-lg text-xs font-extrabold transition"
+          style={inputType === 'message' ? { background: '#990011', color: '#fff' } : { color: '#554B49' }}
         >
           URL / MESSAGE
         </button>
         <button
           type="button"
           onClick={() => { setInputType('file'); fileInputRef.current?.click(); }}
-          className="px-4 py-2 rounded-lg text-xs font-bold transition"
-          style={inputType === 'file' ? { background: '#990011', color: '#fff' } : { color: '#6F6664' }}
+          className="px-4 py-2 rounded-lg text-xs font-extrabold transition"
+          style={inputType === 'file' ? { background: '#990011', color: '#fff' } : { color: '#554B49' }}
         >
           FILE
         </button>
@@ -138,13 +138,13 @@ export default function InvestigateForm({
           disabled={loading} rows={5}
           placeholder="Paste suspicious URL, email header, SMS text, or message here..."
           className="w-full p-4 rounded-xl text-sm font-mono leading-relaxed resize-y"
-          style={{ background: '#FCF6F5', border: '1.5px solid #D5C8C5', color: '#111111', outline: 'none' }}
+          style={{ background: '#ECE6E2', border: '1.5px solid #C4B5B0', color: '#111111', outline: 'none' }}
         />
       ) : (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition"
-          style={{ borderColor: '#D5C8C5', background: '#FCF6F5' }}
+          className="p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition hover:bg-white/40"
+          style={{ borderColor: '#C4B5B0', background: '#ECE6E2' }}
         >
           <input
             ref={fileInputRef} type="file" name="file" className="hidden"
@@ -154,7 +154,7 @@ export default function InvestigateForm({
           <div className="text-sm font-bold" style={{ color: '#111111' }}>
             {fileName ? `Selected: ${fileName}` : 'Click to select a file'}
           </div>
-          <p className="text-xs mt-1" style={{ color: '#6F6664' }}>PDF, DOCX, TXT, CSV · Max 10MB · Metadata only</p>
+          <p className="text-xs mt-1" style={{ color: '#554B49' }}>PDF, DOCX, TXT, CSV · Max 10MB · Metadata only</p>
         </div>
       )}
 
@@ -165,16 +165,16 @@ export default function InvestigateForm({
           <div className="space-y-1.5">
             {STEPS.map((step, i) => (
               <div key={i} className="flex items-center gap-3">
-                <span className="text-xs font-mono font-bold w-4" style={{ color: i < loadingStep ? '#990011' : '#D5C8C5' }}>
+                <span className="text-xs font-mono font-bold w-4" style={{ color: i < loadingStep ? '#990011' : '#C4B5B0' }}>
                   {i < loadingStep ? '✓' : i === loadingStep ? '▸' : '○'}
                 </span>
-                <span className="text-xs font-mono" style={{ color: i < loadingStep ? '#990011' : i === loadingStep ? '#111111' : '#6F6664' }}>
+                <span className="text-xs font-mono font-bold" style={{ color: i < loadingStep ? '#990011' : i === loadingStep ? '#111111' : '#554B49' }}>
                   {step}
                 </span>
               </div>
             ))}
           </div>
-          <div className="w-full rounded-full overflow-hidden" style={{ height: 3, background: '#D5C8C5' }}>
+          <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: '#C4B5B0' }}>
             <div className="h-full rounded-full transition-all duration-500" style={{ background: '#990011', width: `${Math.min(loadingStep * 20 + 5, 100)}%` }} />
           </div>
         </div>
@@ -182,8 +182,8 @@ export default function InvestigateForm({
 
       <button
         type="submit" disabled={disabled}
-        className="w-full py-4 rounded-xl text-sm font-extrabold tracking-widest uppercase transition"
-        style={{ background: disabled ? '#D5C8C5' : '#990011', color: disabled ? '#6F6664' : '#fff' }}
+        className="w-full py-4 rounded-xl text-sm font-extrabold tracking-widest uppercase transition hover:opacity-90 shadow-md"
+        style={{ background: disabled ? '#C4B5B0' : '#990011', color: disabled ? '#554B49' : '#fff' }}
       >
         {loading ? 'INVESTIGATION RUNNING...' : 'INVESTIGATE →'}
       </button>

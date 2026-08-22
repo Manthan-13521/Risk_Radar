@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --rr-bg: #FCF6F5;
-  --rr-surface: #F0E8E6;
-  --rr-surface-2: #E7DEDC;
-  --rr-border: #D5C8C5;
+  --rr-bg: #ECE6E2;
+  --rr-surface: #E0D8D4;
+  --rr-surface-2: #D3C9C5;
+  --rr-border: #C4B5B0;
   --rr-text: #111111;
-  --rr-muted: #6F6664;
+  --rr-muted: #554B49;
   --rr-red: #990011;
   --rr-red-dark: #76000D;
   --rr-red-hover: #B30018;
@@ -17,16 +17,16 @@
 }
 
 html, body {
-  background: #FCF6F5 !important;
+  background: #ECE6E2 !important;
   color: #111111;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
 }
 
-/* Warm scrollbar */
+/* Warm silver scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #E7DEDC; }
-::-webkit-scrollbar-thumb { background: #C4B5B2; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #D3C9C5; }
+::-webkit-scrollbar-thumb { background: #B3A4A0; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #990011; }
 
 @layer utilities {

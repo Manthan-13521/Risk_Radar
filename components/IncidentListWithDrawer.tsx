@@ -20,25 +20,25 @@ export function IncidentListWithDrawer({
   };
 
   function sevBadge(sev: string) {
-    if (sev === 'critical') return { bg: 'rgba(118,0,13,0.1)', color: '#76000D', border: '#76000D' };
-    if (sev === 'high') return { bg: 'rgba(153,0,17,0.1)', color: '#990011', border: '#990011' };
-    if (sev === 'medium') return { bg: 'rgba(184,106,0,0.1)', color: '#B86A00', border: '#B86A00' };
-    return { bg: 'rgba(111,102,100,0.1)', color: '#6F6664', border: '#D5C8C5' };
+    if (sev === 'critical') return { bg: 'rgba(118,0,13,0.12)', color: '#76000D', border: '#76000D' };
+    if (sev === 'high') return { bg: 'rgba(153,0,17,0.12)', color: '#990011', border: '#990011' };
+    if (sev === 'medium') return { bg: 'rgba(184,106,0,0.12)', color: '#B86A00', border: '#B86A00' };
+    return { bg: 'rgba(111,102,100,0.12)', color: '#554B49', border: '#C4B5B0' };
   }
 
   function statusColor(status: string) {
     if (status === 'resolved') return '#176B52';
     if (status === 'triage') return '#990011';
     if (status === 'investigating') return '#B86A00';
-    return '#6F6664';
+    return '#554B49';
   }
 
   if (incidents.length === 0) {
     return (
-      <div className="p-12 text-center rounded-2xl border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+      <div className="p-12 text-center rounded-2xl border" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
         <div className="text-xl font-extrabold mb-2" style={{ color: '#111111' }}>NO INCIDENTS RECORDED</div>
-        <p className="text-sm mb-4" style={{ color: '#6F6664' }}>Investigations scoring Risk ≥ 60 automatically generate incident records.</p>
-        <Link href="/scanner" className="inline-flex px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background: '#990011' }}>
+        <p className="text-sm mb-4" style={{ color: '#554B49' }}>Investigations scoring Risk ≥ 60 automatically generate incident records.</p>
+        <Link href="/scanner" className="inline-flex px-5 py-2.5 rounded-xl text-xs font-extrabold text-white shadow-sm" style={{ background: '#990011' }}>
           SCAN SOMETHING →
         </Link>
       </div>
@@ -67,18 +67,18 @@ export function IncidentListWithDrawer({
               <div
                 key={String(inc._id || inc.incidentId)}
                 onClick={() => handleOpenDrawer(inc)}
-                className="rounded-xl border p-4 cursor-pointer transition hover:bg-white/50 space-y-2 group"
-                style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}
+                className="rounded-xl border p-4 cursor-pointer transition hover:bg-white/50 space-y-2 group shadow-xs"
+                style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span
-                      className="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                      className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase"
                       style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}
                     >
                       {inc.severity}
                     </span>
-                    <span className="text-xs font-mono font-bold" style={{ color: '#111111' }}>
+                    <span className="text-xs font-mono font-extrabold" style={{ color: '#111111' }}>
                       {inc.incidentId}
                     </span>
                   </div>
@@ -89,22 +89,22 @@ export function IncidentListWithDrawer({
 
                 {/* Top 3 lines preview */}
                 <div className="space-y-0.5 text-xs">
-                  <p className="font-semibold line-clamp-1 group-hover:text-[#990011] transition" style={{ color: '#111111' }}>
+                  <p className="font-bold line-clamp-1 group-hover:text-[#990011] transition" style={{ color: '#111111' }}>
                     1. {topLines[0]}
                   </p>
-                  <p className="text-[11px] line-clamp-1 font-mono" style={{ color: '#6F6664' }}>
+                  <p className="text-[11px] line-clamp-1 font-mono font-semibold" style={{ color: '#554B49' }}>
                     2. {topLines[1]}
                   </p>
-                  <p className="text-[11px] line-clamp-1" style={{ color: '#6F6664' }}>
+                  <p className="text-[11px] line-clamp-1 font-medium" style={{ color: '#554B49' }}>
                     3. {topLines[2]}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] pt-2 border-t" style={{ borderColor: '#D5C8C5' }}>
-                  <span className="capitalize font-mono font-bold uppercase text-[10px]" style={{ color: statusColor(inc.status) }}>
+                <div className="flex items-center justify-between text-[11px] pt-2 border-t" style={{ borderColor: '#C4B5B0' }}>
+                  <span className="capitalize font-mono font-extrabold uppercase text-[10px]" style={{ color: statusColor(inc.status) }}>
                     ● {inc.status}
                   </span>
-                  <span className="font-bold flex items-center gap-1" style={{ color: '#990011' }}>
+                  <span className="font-extrabold flex items-center gap-1" style={{ color: '#990011' }}>
                     Quick Preview ⤢
                   </span>
                 </div>
@@ -115,21 +115,21 @@ export function IncidentListWithDrawer({
           return (
             <div
               key={String(inc._id || inc.incidentId)}
-              className="rounded-xl border p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition hover:bg-white/40 cursor-pointer group"
-              style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}
+              className="rounded-xl border p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition hover:bg-white/50 cursor-pointer group shadow-xs"
+              style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}
               onClick={() => handleOpenDrawer(inc)}
             >
               {/* Left Column: Top 3 Lines Highlight */}
               <div className="flex items-start gap-4 min-w-0 flex-1">
                 <span
-                  className="px-2.5 py-1 rounded text-[10px] font-bold uppercase shrink-0 mt-0.5"
+                  className="px-2.5 py-1 rounded text-[10px] font-extrabold uppercase shrink-0 mt-0.5"
                   style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}
                 >
                   {inc.severity}
                 </span>
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-mono font-bold" style={{ color: '#6F6664' }}>
+                    <span className="text-[11px] font-mono font-extrabold" style={{ color: '#554B49' }}>
                       {inc.incidentId}
                     </span>
                     <h3 className="text-sm font-bold truncate group-hover:text-[#990011] transition" style={{ color: '#111111' }}>
@@ -140,16 +140,16 @@ export function IncidentListWithDrawer({
                   {/* 3 lines preview */}
                   <div className="space-y-0.5 text-xs">
                     <div className="flex items-center gap-2 text-[11px]" style={{ color: '#111111' }}>
-                      <span className="font-bold" style={{ color: '#990011' }}>Line 1:</span>
-                      <span className="truncate">{topLines[0]}</span>
+                      <span className="font-extrabold" style={{ color: '#990011' }}>Line 1:</span>
+                      <span className="truncate font-semibold">{topLines[0]}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: '#6F6664' }}>
-                      <span className="font-bold" style={{ color: '#990011' }}>Line 2:</span>
-                      <span className="truncate">{topLines[1]}</span>
+                    <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: '#554B49' }}>
+                      <span className="font-extrabold" style={{ color: '#990011' }}>Line 2:</span>
+                      <span className="truncate font-semibold">{topLines[1]}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px]" style={{ color: '#6F6664' }}>
-                      <span className="font-bold" style={{ color: '#990011' }}>Line 3:</span>
-                      <span className="truncate">{topLines[2]}</span>
+                    <div className="flex items-center gap-2 text-[11px]" style={{ color: '#554B49' }}>
+                      <span className="font-extrabold" style={{ color: '#990011' }}>Line 3:</span>
+                      <span className="truncate font-medium">{topLines[2]}</span>
                     </div>
                   </div>
                 </div>
@@ -158,13 +158,13 @@ export function IncidentListWithDrawer({
               {/* Right Column: Gauges + Pop-up Trigger + Full Detail Link */}
               <div className="flex items-center gap-4 shrink-0 self-end md:self-center" onClick={(e) => e.stopPropagation()}>
                 <div className="text-right">
-                  <div className="text-xs font-bold font-mono" style={{ color: inc.riskScore >= 80 ? '#990011' : inc.riskScore >= 50 ? '#B86A00' : '#111111' }}>
+                  <div className="text-sm font-extrabold font-mono" style={{ color: inc.riskScore >= 80 ? '#990011' : inc.riskScore >= 50 ? '#B86A00' : '#111111' }}>
                     {inc.riskScore}/100
                   </div>
-                  <div className="text-[10px]" style={{ color: '#6F6664' }}>risk</div>
+                  <div className="text-[10px] font-bold" style={{ color: '#554B49' }}>risk</div>
                 </div>
                 <span
-                  className="px-2.5 py-1 rounded text-[10px] font-bold uppercase"
+                  className="px-2.5 py-1 rounded text-[10px] font-extrabold uppercase font-mono"
                   style={{ background: 'rgba(153,0,17,0.06)', color: statusColor(inc.status) }}
                 >
                   {inc.status}
@@ -173,8 +173,8 @@ export function IncidentListWithDrawer({
                 <button
                   type="button"
                   onClick={() => handleOpenDrawer(inc)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold border transition hover:bg-white"
-                  style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold border transition hover:bg-white"
+                  style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
                   title="Open Slide-over Unit Preview"
                 >
                   Side Preview ⤢
@@ -182,7 +182,7 @@ export function IncidentListWithDrawer({
 
                 <Link
                   href={`/incidents/${String(inc._id || inc.incidentId)}`}
-                  className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition hover:opacity-90"
+                  className="px-4 py-2 rounded-xl text-xs font-extrabold text-white transition hover:opacity-90 shadow-sm"
                   style={{ background: '#990011' }}
                 >
                   Full Detail →

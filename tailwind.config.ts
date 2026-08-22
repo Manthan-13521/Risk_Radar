@@ -10,12 +10,12 @@ const config: Config = {
     extend: {
       colors: {
         rr: {
-          bg: '#FCF6F5',
-          surface: '#F0E8E6',
-          surface2: '#E7DEDC',
-          border: '#D5C8C5',
+          bg: '#ECE6E2',
+          surface: '#E0D8D4',
+          surface2: '#D3C9C5',
+          border: '#C4B5B0',
           text: '#111111',
-          muted: '#6F6664',
+          muted: '#554B49',
           red: '#990011',
           'red-dark': '#76000D',
           'red-hover': '#B30018',

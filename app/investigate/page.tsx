@@ -32,25 +32,25 @@ export default async function ScannerPage() {
   const recentScans = await db.collection('scans').find({}).sort({ createdAt: -1 }).limit(5).toArray();
 
   return (
-    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#FCF6F5' }}>
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#ECE6E2' }}>
       {/* Header */}
-      <div className="border-b pb-6" style={{ borderColor: '#D5C8C5' }}>
-        <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Artifact Investigation Workspace</div>
+      <div className="border-b pb-6" style={{ borderColor: '#C4B5B0' }}>
+        <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Artifact Investigation Workspace</div>
         <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>INVESTIGATION WORKSPACE</h1>
-        <p className="text-sm mt-1" style={{ color: '#6F6664' }}>Submit suspicious URLs, emails, SMS messages or files for multi-stage security analysis.</p>
+        <p className="text-sm mt-1" style={{ color: '#554B49' }}>Submit suspicious URLs, emails, SMS messages or files for multi-stage security analysis.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form (2 cols) */}
         <div className="lg:col-span-2 space-y-5">
-          <div className="rounded-2xl border p-6 md:p-8" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
-            <div className="text-[10px] font-bold uppercase tracking-widest mb-5" style={{ color: '#990011' }}>Submit Artifact for Sandbox Analysis</div>
+          <div className="rounded-2xl border p-6 md:p-8 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+            <div className="text-[10px] font-extrabold uppercase tracking-widest mb-5" style={{ color: '#990011' }}>Submit Artifact for Sandbox Analysis</div>
             <InvestigateForm />
           </div>
 
           {/* Demo scenarios */}
-          <div className="rounded-2xl border p-5" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
-            <div className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#6F6664' }}>Demo Scenarios</div>
+          <div className="rounded-2xl border p-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+            <div className="text-[10px] font-extrabold uppercase tracking-widest mb-3" style={{ color: '#554B49' }}>Demo Scenarios</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {DEMO_CASES.map(d => {
                 const { bg, color } = clsStyle(d.cls);
@@ -58,14 +58,14 @@ export default async function ScannerPage() {
                   <Link
                     key={d.title}
                     href={`/scanner?type=${d.type}&content=${encodeURIComponent(d.content)}`}
-                    className="p-3.5 rounded-xl border transition hover:bg-white/30"
-                    style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+                    className="p-3.5 rounded-xl border transition hover:bg-white/40 shadow-xs"
+                    style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <span className="text-xs font-bold" style={{ color: '#111111' }}>{d.title}</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0" style={{ background: bg, color }}>{d.cls}</span>
+                      <span className="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase shrink-0" style={{ background: bg, color }}>{d.cls}</span>
                     </div>
-                    <p className="text-[11px] leading-relaxed" style={{ color: '#6F6664' }}>{d.desc}</p>
+                    <p className="text-[11px] leading-relaxed" style={{ color: '#554B49' }}>{d.desc}</p>
                   </Link>
                 );
               })}
@@ -75,27 +75,27 @@ export default async function ScannerPage() {
 
         {/* Right: Pipeline + Recent Scans */}
         <div className="space-y-5">
-          <div className="rounded-2xl border p-5" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
-            <div className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: '#111111' }}>Investigation Pipeline</div>
+          <div className="rounded-2xl border p-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+            <div className="text-[10px] font-extrabold uppercase tracking-widest mb-4" style={{ color: '#111111' }}>Investigation Pipeline</div>
             <div className="space-y-1">
               {PIPELINE.map(p => (
-                <div key={p.n} className="flex items-center gap-3 py-2.5 border-b last:border-0" style={{ borderColor: '#D5C8C5' }}>
+                <div key={p.n} className="flex items-center gap-3 py-2.5 border-b last:border-0" style={{ borderColor: '#C4B5B0' }}>
                   <span className="text-xs font-bold font-mono" style={{ color: '#990011' }}>{p.n}</span>
-                  <span className="text-xs" style={{ color: '#111111' }}>{p.label}</span>
+                  <span className="text-xs font-semibold" style={{ color: '#111111' }}>{p.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
-            <div className="flex items-center justify-between px-4 py-3.5 border-b" style={{ borderColor: '#D5C8C5' }}>
-              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#111111' }}>Recent Scans</div>
+          <div className="rounded-2xl border shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+            <div className="flex items-center justify-between px-4 py-3.5 border-b" style={{ borderColor: '#C4B5B0' }}>
+              <div className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#111111' }}>Recent Scans</div>
               <Link href="/history" className="text-xs font-bold" style={{ color: '#990011' }}>All →</Link>
             </div>
             {recentScans.length === 0 ? (
-              <div className="p-5 text-xs text-center" style={{ color: '#6F6664' }}>No scans yet</div>
+              <div className="p-5 text-xs text-center" style={{ color: '#554B49' }}>No scans yet</div>
             ) : (
-              <div className="divide-y" style={{ borderColor: '#D5C8C5' }}>
+              <div className="divide-y" style={{ borderColor: '#C4B5B0' }}>
                 {recentScans.map(s => {
                   const isThreat = s.classification === 'critical' || s.classification === 'dangerous';
                   const color = isThreat ? '#990011' : s.classification === 'suspicious' ? '#B86A00' : '#176B52';
@@ -103,15 +103,15 @@ export default async function ScannerPage() {
                     <Link
                       key={String(s._id)}
                       href={`/investigate/${String(s._id)}`}
-                      className="flex items-center justify-between px-4 py-3 transition hover:bg-white/30"
+                      className="flex items-center justify-between px-4 py-3 transition hover:bg-white/40"
                     >
                       <div className="min-w-0 pr-2">
-                        <div className="text-xs font-mono truncate" style={{ color: '#111111' }}>
+                        <div className="text-xs font-mono font-semibold truncate" style={{ color: '#111111' }}>
                           {s.inputType === 'file'
                             ? (s.inputMetadata as Record<string, unknown>)?.filename as string
                             : (s.inputMetadata as Record<string, unknown>)?.truncatedContent as string}
                         </div>
-                        <div className="text-[10px] capitalize font-mono mt-0.5" style={{ color: '#6F6664' }}>
+                        <div className="text-[10px] capitalize font-mono mt-0.5" style={{ color: '#554B49' }}>
                           {s.inputType} · {String(s.attackerIntent || 'unknown').replace(/_/g, ' ')}
                         </div>
                       </div>

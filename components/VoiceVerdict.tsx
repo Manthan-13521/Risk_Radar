@@ -58,10 +58,10 @@ export default function VoiceVerdict({
 
   return (
     <div
-      className="rounded-xl border p-4 flex items-center justify-between gap-4"
+      className="rounded-xl border p-4 flex items-center justify-between gap-4 shadow-xs"
       style={{
-        background: isRisk ? 'rgba(153,0,17,0.04)' : 'rgba(23,107,82,0.04)',
-        borderColor: isRisk ? 'rgba(153,0,17,0.2)' : 'rgba(23,107,82,0.2)',
+        background: isRisk ? 'rgba(153,0,17,0.06)' : 'rgba(23,107,82,0.06)',
+        borderColor: isRisk ? 'rgba(153,0,17,0.25)' : 'rgba(23,107,82,0.25)',
       }}
       role="region"
       aria-label="Audio voice verdict"
@@ -69,10 +69,10 @@ export default function VoiceVerdict({
       <div className="flex items-center gap-3 min-w-0">
         <span className="text-base shrink-0" style={{ color: accentColor }}>{isSpeaking ? '🔊' : '🔈'}</span>
         <div className="min-w-0">
-          <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+          <div className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: accentColor }}>
             VOICE VERDICT · {isSpeaking ? 'SPEAKING' : 'READY'}
           </div>
-          <div className="text-xs truncate mt-0.5" style={{ color: '#6F6664' }}>
+          <div className="text-xs truncate mt-0.5 font-medium" style={{ color: '#554B49' }}>
             {isRisk
               ? `Risk detected. Score: ${riskScore}/100. Access restricted.`
               : `Verified safe. Score: ${riskScore}/100. Access allowed.`}
@@ -83,15 +83,15 @@ export default function VoiceVerdict({
         {isSpeaking ? (
           <button
             onClick={stop}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold border transition"
-            style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#111111' }}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold border transition hover:bg-white"
+            style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
           >
             Stop
           </button>
         ) : (
           <button
             onClick={speak}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition hover:opacity-90"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold text-white transition hover:opacity-90 shadow-sm"
             style={{ background: accentColor }}
           >
             {hasStarted ? 'Replay' : 'Play'}

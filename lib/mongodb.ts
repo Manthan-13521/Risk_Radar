@@ -6,8 +6,8 @@ const options = {};
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your Mongo URI to .env.local');
+if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.NEXT_PHASE) {
+  console.warn('[ShieldSense/DB] Warning: MONGODB_URI is not set in environment.');
 }
 
 if (process.env.NODE_ENV === 'development') {

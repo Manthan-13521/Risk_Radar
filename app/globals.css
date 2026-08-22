@@ -3,15 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --background: #06090e;
-  --foreground: #ededed;
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
-body {
+html, body {
   color: var(--foreground);
-  background: var(--background);
+  background: #000000 !important;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+}
+
+/* Complete pitch black background utilities */
+.bg-pitch-black {
+  background-color: #000000 !important;
+}
+
+.bg-dark-card {
+  background-color: #0a0a0a !important;
+}
+
+.bg-dark-surface {
+  background-color: #121212 !important;
 }
 
 /* Custom sleek dark scrollbar */
@@ -21,16 +34,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #070a10;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a2233;
+  background: #1c1c1c;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2b3752;
+  background: #2a2a2a;
 }
 
 @layer utilities {

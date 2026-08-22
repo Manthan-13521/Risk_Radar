@@ -3,8 +3,6 @@ export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { getDb } from '@/lib/mongodb';
 import InvestigateForm from '@/components/InvestigateForm';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 
 const DEMO_CASES = [
   {
@@ -12,7 +10,7 @@ const DEMO_CASES = [
     type: 'url',
     content: 'https://paypa1-security.example.invalid/login',
     classification: 'critical',
-    desc: 'Lookalike PayPal domain with credential harvesting login path',
+    desc: 'Homoglyph lookalike PayPal domain with credential harvesting login path',
   },
   {
     title: 'Package Delivery Scam',
@@ -26,7 +24,7 @@ const DEMO_CASES = [
     type: 'message',
     content: 'FINAL WARNING: Verify your HDFC banking account today or access may be disabled. Complete identity verification immediately.',
     classification: 'dangerous',
-    desc: 'Coercive urgency and credential request signature',
+    desc: 'Coercive urgency and credential demand signature',
   },
   {
     title: 'Legitimate Calendar Invite',
@@ -44,61 +42,84 @@ const DEMO_CASES = [
   },
 ];
 
-export default async function InvestigatePage() {
+export default async function ScannerPage() {
   const db = await getDb();
   const recentScans = await db
     .collection('scans')
     .find({})
     .sort({ createdAt: -1 })
-    .limit(6)
+    .limit(5)
     .toArray();
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-[1500px] mx-auto">
-      <PageHeader
-        title="Scanner & Artifact Investigation"
-        subtitle="Submit URLs, raw messages, or files for deep behavioral heuristic extraction, Threat DNA mapping, and AI reasoning."
-        badge={
-          <span className="text-xs bg-teal-950/80 border border-teal-800/60 text-teal-300 px-2.5 py-0.5 rounded font-mono">
-            SANDBOX v2.4 ONLINE
-          </span>
-        }
-      />
+    <div className="p-4 sm:p-6 md:p-8 space-y-8 max-w-[1250px] mx-auto bg-black text-white">
+      {/* Header */}
+      <div className="border-b border-[#181818] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🔍</span>
+            <h1 className="text-2xl font-bold tracking-tight text-white font-mono">
+              Investigation Workspace
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-teal-950/80 text-teal-400 border border-teal-800/60">
+              SANDBOX v2.4
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+            Deep multi-stage inspection of suspicious URLs, emails, SMS text, and multi-format files.
+          </p>
+        </div>
+
+        <Link
+          href="/history"
+          className="text-xs text-zinc-400 hover:text-teal-300 transition flex items-center gap-1 self-start sm:self-auto font-mono"
+        >
+          <span>View Telemetry History →</span>
+        </Link>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Columns: Main Input & Form */}
+        {/* Main Input Form (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#0b101b] border border-zinc-800/80 rounded-xl p-5 md:p-6 shadow-xl">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-4 flex items-center gap-2">
-              <span className="text-teal-400">🎯</span>
-              <span>Submit Artifact for Multi-Stage Inspection</span>
-            </h2>
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1c1c1c] pb-3">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-white font-mono flex items-center gap-2">
+                <span>🎯</span>
+                <span>Submit Artifact for Sandbox Analysis</span>
+              </h2>
+              <span className="text-[11px] font-mono text-zinc-500">Heuristics + AI + Policies</span>
+            </div>
             <InvestigateForm />
           </div>
 
-          {/* Demo Scenario Quick-Picks */}
-          <div className="bg-[#0b101b] border border-zinc-800/80 rounded-xl p-5 md:p-6">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-300 mb-2 flex items-center gap-2">
-              <span className="text-amber-400">⚡</span>
-              <span>Pre-Configured Test Scenarios</span>
+          {/* Quick Demo Scenarios */}
+          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-2xl p-6 space-y-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2 font-mono">
+              <span>⚡</span>
+              <span>1-Click Pre-Configured Test Scenarios</span>
             </h2>
-            <p className="text-xs text-zinc-500 mb-4">
-              Click any scenario to load it directly into the sandbox investigation engine:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               {DEMO_CASES.map((demo) => (
                 <Link
                   key={demo.title}
-                  href={`/investigate?type=${demo.type}&content=${encodeURIComponent(demo.content)}`}
-                  className="p-3.5 bg-[#0e1422] hover:bg-[#141d30] border border-zinc-800/80 hover:border-teal-500/40 rounded-lg transition flex flex-col justify-between group"
+                  href={`/scanner?type=${demo.type}&content=${encodeURIComponent(demo.content)}`}
+                  className="p-3.5 bg-[#111111] hover:bg-[#181818] border border-[#222222] hover:border-teal-500/40 rounded-xl transition flex flex-col justify-between group"
                 >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="text-xs font-bold text-zinc-200 group-hover:text-teal-300 transition">
                       {demo.title}
                     </span>
-                    <StatusBadge classification={demo.classification} />
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded uppercase ${
+                      demo.classification === 'critical'
+                        ? 'bg-red-950 text-red-400'
+                        : demo.classification === 'dangerous'
+                        ? 'bg-amber-950 text-amber-400'
+                        : 'bg-emerald-950 text-emerald-400'
+                    }`}>
+                      {demo.classification}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">{demo.desc}</p>
+                  <p className="text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">{demo.desc}</p>
                 </Link>
               ))}
             </div>
@@ -107,48 +128,44 @@ export default async function InvestigatePage() {
 
         {/* Right Column: Pipeline Stages & Recent Scans */}
         <div className="space-y-6">
-          {/* Analysis Pipeline Stages */}
-          <div className="bg-[#0b101b] border border-zinc-800/80 rounded-xl p-5 space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+          {/* Defense in Depth Pipeline */}
+          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-2xl p-5 space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2 font-mono">
               <span>🛡</span>
-              <span>Defense-in-Depth Pipeline</span>
+              <span>Investigation Pipeline</span>
             </h3>
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center gap-2.5 text-zinc-300 p-2 bg-[#0e1422] rounded border border-zinc-800/60">
-                <span className="w-5 h-5 rounded bg-blue-950 border border-blue-800/60 text-blue-400 flex items-center justify-center font-mono text-[10px] font-bold">
-                  1
-                </span>
-                <span>Deterministic Heuristic Extractor</span>
+            <div className="space-y-2 text-xs font-mono">
+              <div className="p-2.5 bg-[#111111] border border-[#222222] rounded-lg flex items-center gap-2.5 text-zinc-300">
+                <span className="w-5 h-5 rounded bg-blue-950 text-blue-400 flex items-center justify-center font-bold text-[10px]">1</span>
+                <span>Signal Detection & Extraction</span>
               </div>
-              <div className="flex items-center gap-2.5 text-zinc-300 p-2 bg-[#0e1422] rounded border border-zinc-800/60">
-                <span className="w-5 h-5 rounded bg-purple-950 border border-purple-800/60 text-purple-400 flex items-center justify-center font-mono text-[10px] font-bold">
-                  2
-                </span>
+              <div className="p-2.5 bg-[#111111] border border-[#222222] rounded-lg flex items-center gap-2.5 text-zinc-300">
+                <span className="w-5 h-5 rounded bg-purple-950 text-purple-400 flex items-center justify-center font-bold text-[10px]">2</span>
+                <span>URL / File Structural Analysis</span>
+              </div>
+              <div className="p-2.5 bg-[#111111] border border-[#222222] rounded-lg flex items-center gap-2.5 text-zinc-300">
+                <span className="w-5 h-5 rounded bg-teal-950 text-teal-400 flex items-center justify-center font-bold text-[10px]">3</span>
                 <span>Contextual AI Reasoning Layer</span>
               </div>
-              <div className="flex items-center gap-2.5 text-zinc-300 p-2 bg-[#0e1422] rounded border border-zinc-800/60">
-                <span className="w-5 h-5 rounded bg-teal-950 border border-teal-800/60 text-teal-400 flex items-center justify-center font-mono text-[10px] font-bold">
-                  3
-                </span>
-                <span>Authoritative Hard Policy Safety Layer</span>
+              <div className="p-2.5 bg-[#111111] border border-[#222222] rounded-lg flex items-center gap-2.5 text-zinc-300">
+                <span className="w-5 h-5 rounded bg-amber-950 text-amber-400 flex items-center justify-center font-bold text-[10px]">4</span>
+                <span>Threat DNA Memory Clustering</span>
               </div>
-              <div className="flex items-center gap-2.5 text-zinc-300 p-2 bg-[#0e1422] rounded border border-zinc-800/60">
-                <span className="w-5 h-5 rounded bg-amber-950 border border-amber-800/60 text-amber-400 flex items-center justify-center font-mono text-[10px] font-bold">
-                  4
-                </span>
-                <span>Threat DNA Historical Clustering</span>
+              <div className="p-2.5 bg-[#111111] border border-[#222222] rounded-lg flex items-center gap-2.5 text-zinc-300">
+                <span className="w-5 h-5 rounded bg-emerald-950 text-emerald-400 flex items-center justify-center font-bold text-[10px]">5</span>
+                <span>Authoritative Policy Guard</span>
               </div>
             </div>
           </div>
 
-          {/* Recent Investigations */}
-          <div className="bg-[#0b101b] border border-zinc-800/80 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+          {/* Recent Scans Mini Feed */}
+          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#1c1c1c] pb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white font-mono">
                 Recent Scans
               </h3>
-              <Link href="/history" className="text-xs text-teal-400 hover:underline">
-                View All →
+              <Link href="/history" className="text-xs text-teal-400 hover:underline font-mono">
+                All →
               </Link>
             </div>
             {recentScans.length === 0 ? (
@@ -159,19 +176,27 @@ export default async function InvestigatePage() {
                   <Link
                     key={String(s._id)}
                     href={`/investigate/${String(s._id)}`}
-                    className="flex items-center justify-between p-2.5 bg-[#0e1422] hover:bg-[#141d30] rounded-lg border border-zinc-800/60 transition text-xs group"
+                    className="p-2.5 bg-[#111111] hover:bg-[#181818] border border-[#222222] rounded-lg flex items-center justify-between text-xs transition group"
                   >
-                    <div className="min-w-0 flex-1 pr-2">
-                      <div className="font-mono text-zinc-200 group-hover:text-teal-300 transition truncate">
+                    <div className="min-w-0 pr-2">
+                      <div className="font-mono text-zinc-200 group-hover:text-teal-300 truncate">
                         {s.inputType === 'file'
                           ? (s.inputMetadata as Record<string, unknown>)?.filename as string
                           : (s.inputMetadata as Record<string, unknown>)?.truncatedContent as string}
                       </div>
-                      <div className="text-[10px] text-zinc-500 mt-0.5 capitalize">
+                      <div className="text-[10px] text-zinc-500 capitalize font-mono mt-0.5">
                         {s.inputType} • {s.attackerIntent?.replace(/_/g, ' ') || 'unknown'}
                       </div>
                     </div>
-                    <StatusBadge classification={s.classification} />
+                    <span className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      s.classification === 'critical' || s.classification === 'dangerous'
+                        ? 'bg-red-950 text-red-400'
+                        : s.classification === 'suspicious'
+                        ? 'bg-amber-950 text-amber-400'
+                        : 'bg-emerald-950 text-emerald-400'
+                    }`}>
+                      {s.riskScore}/100
+                    </span>
                   </Link>
                 ))}
               </div>

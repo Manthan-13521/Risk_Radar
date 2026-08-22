@@ -21,8 +21,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'OPERATIONS',
     items: [
-      { label: 'Executive Dashboard', href: '/', icon: '🏛️' },
-      { label: 'Artifact Scanner', href: '/investigate', icon: '🔍', isGold: true },
+      { label: 'Executive Dashboard', href: '/dashboard', icon: '🏛️' },
+      { label: 'Artifact Scanner', href: '/scanner', icon: '🔍', isGold: true },
       { label: 'Incident Response', href: '/incidents', icon: '🚨' },
       { label: 'Scan History', href: '/history', icon: '📋' },
     ],
@@ -41,7 +41,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Knowledge Center', href: '/knowledge', icon: '📚' },
       { label: 'AI System Health', href: '/ai-health', icon: '🤖' },
       { label: 'Evaluation Lab', href: '/evaluation', icon: '🧪' },
-      { label: 'Immutable Audit Logs', href: '/audit-logs', icon: '📜' },
+      { label: 'Immutable Audit Logs', href: '/audit', icon: '📜' },
       { label: 'Settings', href: '/settings', icon: '⚙️' },
     ],
   },
@@ -49,8 +49,16 @@ const NAV_SECTIONS: NavSection[] = [
 
 function SidebarNav({ pathname }: { pathname: string }) {
   const isLinkActive = (href: string) => {
-    if (href === '/') return pathname === '/';
-    return (pathname ?? '').startsWith(href);
+    if (href === '/' || href === '/dashboard') {
+      return pathname === '/' || pathname === '/dashboard';
+    }
+    if (href === '/investigate' || href === '/scanner') {
+      return pathname.startsWith('/investigate') || pathname.startsWith('/scanner');
+    }
+    if (href === '/audit-logs' || href === '/audit') {
+      return pathname.startsWith('/audit-logs') || pathname.startsWith('/audit');
+    }
+    return pathname.startsWith(href);
   };
 
   return (

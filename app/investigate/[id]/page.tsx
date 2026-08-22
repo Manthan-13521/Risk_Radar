@@ -20,13 +20,7 @@ export default async function InvestigationResult({ params }: { params: { id: st
 
   const voiceText = generateVoiceSummary({
     riskScore: scan.riskScore,
-    confidenceScore: scan.confidenceScore,
     classification: scan.classification,
-    attackerIntent: scan.attackerIntent ?? 'uncertain',
-    explanation: scan.explanation ?? '',
-    evidence: (scan.evidence ?? []) as Array<{ severity: string; title: string }>,
-    recommendedAction: scan.recommendedAction,
-    dnaOverlap: scan.dnaOverlap as Array<{ overlapPercent: number }> | undefined,
   });
 
   const formattedIntent = (scan.attackerIntent as string || 'uncertain')

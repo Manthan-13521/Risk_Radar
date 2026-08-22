@@ -3,7 +3,7 @@ import { extractSignals } from '@/lib/heuristics';
 import { callLLM } from '@/lib/openrouter';
 import { getDb } from '@/lib/mongodb';
 import { findSimilarDNA } from '@/lib/dna';
-import { calculateFinalRisk, calculateFinalConfidence, determineAction } from '@/lib/policy-engine';
+import { calculateFinalRisk, calculateFinalConfidence, determineAction, buildFallbackOutput } from '@/lib/policy-engine';
 import { normalizeTag } from '@/lib/dna';
 import { shouldSendAlert, sendWhatsAppAlert } from '@/lib/whatsapp';
 
@@ -88,31 +88,18 @@ async function investigateAndAlert(content: string, senderPhone: string): Promis
   let llmOutput = null;
 
   try {
-    llmOutput = await callLLM(heuristicData.signals, truncated);
+    const { output } = await callLLM(heuristicData.signals, truncated);
+    llmOutput = output;
   } catch (e: unknown) {
     console.error('LLM error in webhook:', (e as Error).message);
   }
 
   if (!llmOutput) {
-    llmOutput = {
-      risk_score: heuristicData.score,
-      confidence_score: 30,
-      classification: heuristicData.score > 60 ? 'dangerous' : heuristicData.score > 30 ? 'suspicious' : 'safe',
-      attacker_intent: 'uncertain',
-      explanation: 'AI reasoning unavailable. Heuristic fallback used.',
-      evidence: heuristicData.signals.map((s) => ({
-        type: s.type,
-        severity: s.severity as 'low' | 'medium' | 'high' | 'critical',
-        title: s.title,
-        description: s.description,
-      })),
-      dna_tags: ['UNANALYZED'],
-      recommended_action: 'warn',
-    };
+    llmOutput = buildFallbackOutput(heuristicData.score, heuristicData.signals, 'AI_FALLBACK_WHATSAPP');
   }
 
   const finalRisk = calculateFinalRisk(heuristicData.score, llmOutput.risk_score);
-  const finalConfidence = calculateFinalConfidence(
+  const { confidence: finalConfidence } = calculateFinalConfidence(
     llmOutput.confidence_score,
     heuristicData.score,
     llmOutput.risk_score,
@@ -120,13 +107,21 @@ async function investigateAndAlert(content: string, senderPhone: string): Promis
     heuristicData.signals.length
   );
   const action = determineAction(finalRisk, finalConfidence);
-  const uniqueDnaTags = Array.from(new Set(llmOutput.dna_tags.map(normalizeTag)));
+  const uniqueDnaTags = Array.from(
+    new Set(
+      llmOutput.dna_tags
+        .map(normalizeTag)
+        .filter((t): t is string => Boolean(t))
+    )
+  );
 
   const db = await getDb();
   let dnaOverlap: Array<{ overlapPercent: number; scanId: string; previousIntent: string; sharedTags: string[] }> = [];
-  try {
-    dnaOverlap = await findSimilarDNA(uniqueDnaTags);
-  } catch { /* non-fatal */ }
+  if (uniqueDnaTags.length >= 2) {
+    try {
+      dnaOverlap = await findSimilarDNA(uniqueDnaTags);
+    } catch { /* non-fatal */ }
+  }
 
   const scanDoc = {
     inputType: 'whatsapp',

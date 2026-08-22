@@ -1,18 +1,25 @@
 import { NextResponse } from 'next/server';
 import { extractSignals } from '@/lib/heuristics';
+import { extractUrlFeatures, scoreUrlFeatures } from '@/lib/url-analysis';
 import { callLLM } from '@/lib/openrouter';
 import { getDb } from '@/lib/mongodb';
-import { findSimilarDNA } from '@/lib/dna';
-import { calculateFinalRisk, calculateFinalConfidence, determineAction } from '@/lib/policy-engine';
+import { findSimilarDNA, normalizeTag } from '@/lib/dna';
+import {
+  calculateFinalRisk,
+  calculateFinalConfidence,
+  classifyRisk,
+  determineAction,
+  buildFallbackOutput,
+} from '@/lib/policy-engine';
 import { extractFileMetadataAndText, FileHeuristic } from '@/lib/file-analysis';
 
-// Lightweight in-memory rate limiter — not distributed, suitable for hackathon
+// Lightweight in-memory rate limiter
 const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const windowMs = 60 * 1000;
-  const maxRequests = 10;
+  const maxRequests = 20;
   const record = rateLimitCache.get(ip);
   if (!record || now > record.resetTime) {
     rateLimitCache.set(ip, { count: 1, resetTime: now + windowMs });
@@ -57,7 +64,7 @@ export async function POST(req: Request) {
         fileHeuristics = analysis.heuristics;
 
         if (!analysis.isSupportedForText) {
-          content = `[File type ${analysis.metadata.extension} received. ShieldSense performed metadata-level analysis only. No text was extracted.]`;
+          content = `[File type ${analysis.metadata.extension} received. ShieldSense performed structural analysis only. No text was extracted.]`;
         } else {
           content = analysis.text;
           if (analysis.isTruncated) {
@@ -73,96 +80,157 @@ export async function POST(req: Request) {
       content = body.content ?? '';
     }
 
+    // Determine if input is a URL even if sent under message radio
+    const trimmed = content.trim();
+    const isExplicitUrl =
+      type === 'url' ||
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(trimmed);
+
+    if (isExplicitUrl && type !== 'file') {
+      type = 'url';
+    }
+
     // Input length guards
     if (type === 'url' && content.length > 2000) {
       return NextResponse.json({ error: 'URL exceeds the 2000-character limit.' }, { status: 400 });
     }
-    if ((type === 'message') && content.length > 20000) {
+    if (type === 'message' && content.length > 20000) {
       return NextResponse.json({ error: 'Message exceeds the 20000-character limit.' }, { status: 400 });
     }
     if (!content && !fileMetadata) {
       return NextResponse.json({ error: 'Missing content or file to investigate.' }, { status: 400 });
     }
 
-    // Heuristics
-    const heuristicData = extractSignals(content);
-    const combinedSignals = [...heuristicData.signals, ...fileHeuristics];
-    let baseScore = heuristicData.score;
-    for (const h of fileHeuristics) {
-      if (h.severity === 'high') baseScore += 30;
-      if (h.severity === 'medium') baseScore += 15;
+    // 1. Extract deterministic signals
+    let urlFeaturesObj: Record<string, unknown> | undefined = undefined;
+    const heuristicData = extractSignals(content, type);
+    
+    if (type === 'url') {
+      const uFeatures = extractUrlFeatures(content);
+      if (uFeatures) {
+        urlFeaturesObj = uFeatures as unknown as Record<string, unknown>;
+        const { score: uScore, signals: uSignals } = scoreUrlFeatures(uFeatures);
+        // Ensure all URL signals are represented
+        for (const us of uSignals) {
+          if (!heuristicData.signals.some((s) => s.type === us.type)) {
+            heuristicData.signals.push(us);
+          }
+        }
+        heuristicData.score = Math.max(heuristicData.score, uScore);
+      }
     }
-    baseScore = Math.min(baseScore, 100);
 
-    // AI Reasoning with safe fallback
-    let llmOutput = null;
-    try {
-      llmOutput = await callLLM(combinedSignals, content);
-    } catch (e: unknown) {
-      console.error('LLM API Error:', (e as Error).message);
+    const combinedSignals = [...heuristicData.signals, ...fileHeuristics];
+    let baseHeuristicScore = heuristicData.score;
+    for (const h of fileHeuristics) {
+      if (h.severity === 'critical') baseHeuristicScore += 35;
+      else if (h.severity === 'high') baseHeuristicScore += 25;
+      else if (h.severity === 'medium') baseHeuristicScore += 15;
     }
+    baseHeuristicScore = Math.max(0, Math.min(100, baseHeuristicScore));
+
+    // 2. Structured AI Reasoning
+    let analysisStatus: 'complete' | 'fallback' | 'failed' = 'complete';
+    let analysisSource: 'heuristic+ai' | 'heuristic_only' | 'failed' = 'heuristic+ai';
+    let failureReasonCode: string | null = null;
+
+    const { output: rawLlmOutput, failureCode } = await callLLM(
+      combinedSignals,
+      content,
+      urlFeaturesObj
+    );
+
+    let llmOutput = rawLlmOutput;
 
     if (!llmOutput) {
-      llmOutput = {
-        risk_score: baseScore,
-        confidence_score: 30,
-        classification: baseScore > 60 ? 'dangerous' : baseScore > 30 ? 'suspicious' : 'safe',
-        attacker_intent: 'uncertain',
-        explanation:
-          "ShieldSense's reasoning service is temporarily unavailable. We used local security signals to provide a conservative assessment.",
-        evidence: combinedSignals.map((s) => ({
-          type: s.type,
-          severity: s.severity as 'low' | 'medium' | 'high' | 'critical',
-          title: s.title,
-          description: s.description,
-        })),
-        dna_tags: ['UNANALYZED'],
-        recommended_action: 'warn',
-      };
+      analysisStatus = 'fallback';
+      analysisSource = 'heuristic_only';
+      failureReasonCode = failureCode;
+      llmOutput = buildFallbackOutput(baseHeuristicScore, combinedSignals, failureCode);
     }
 
-    const finalRisk = calculateFinalRisk(baseScore, llmOutput.risk_score);
-    const finalConfidence = calculateFinalConfidence(
+    // Guarantee: If risk is elevated (>=60), evidence must not be empty
+    if (llmOutput.risk_score >= 60 && llmOutput.evidence.length === 0) {
+      if (combinedSignals.length > 0) {
+        llmOutput.evidence = combinedSignals.map((s) => ({
+          type: s.type,
+          severity: s.severity,
+          title: s.title,
+          description: s.description,
+        }));
+      } else {
+        llmOutput.evidence.push({
+          type: 'elevated_risk_profile',
+          severity: 'medium',
+          title: 'Suspicious Behavioral Signature',
+          description: 'Structural characteristics indicate anomalous behavior requiring caution.',
+        });
+      }
+    }
+
+    // 3. Calibrate Risk, Confidence, and Classification via Policy Engine
+    const finalRisk = calculateFinalRisk(baseHeuristicScore, llmOutput.risk_score);
+    const { confidence: finalConfidence, hasDisagreement } = calculateFinalConfidence(
       llmOutput.confidence_score,
-      baseScore,
+      baseHeuristicScore,
       llmOutput.risk_score,
       llmOutput.attacker_intent,
       combinedSignals.length
     );
-    const action = determineAction(finalRisk, finalConfidence);
 
-    // DNA tagging
-    const extendedDnaTags = [...llmOutput.dna_tags, ...fileHeuristics.map((h) => h.type.toUpperCase())];
-    const uniqueDnaTags = Array.from(new Set(extendedDnaTags));
+    const finalClassification = classifyRisk(finalRisk, finalConfidence);
+    const finalAction = determineAction(finalRisk, finalConfidence);
 
-    const db = await getDb();
-    let dnaOverlap: ReturnType<typeof findSimilarDNA> extends Promise<infer T> ? T : never = [];
-    try {
-      dnaOverlap = await findSimilarDNA(uniqueDnaTags);
-    } catch (e: unknown) {
-      console.error('DNA matching failed:', (e as Error).message);
+    // 4. Threat DNA Tag Extraction (Filtered & Normalized)
+    const rawDnaTags = [
+      ...llmOutput.dna_tags,
+      ...combinedSignals.map((s) => s.type),
+    ];
+    const normalizedDnaTags = Array.from(
+      new Set(
+        rawDnaTags
+          .map(normalizeTag)
+          .filter((t): t is string => Boolean(t))
+      )
+    );
+
+    // 5. Threat DNA History Comparison (Requires at least 2 meaningful tags)
+    let dnaOverlap: Array<{
+      scanId: string;
+      overlapPercent: number;
+      sharedTags: string[];
+      previousIntent: string;
+    }> = [];
+
+    if (normalizedDnaTags.length >= 2) {
+      try {
+        dnaOverlap = await findSimilarDNA(normalizedDnaTags);
+      } catch (e: unknown) {
+        console.error('[ShieldSense/DNA] Match query error:', (e as Error).message);
+      }
     }
 
+    // 6. Persist to MongoDB
+    const db = await getDb();
     const scanDoc = {
       inputType: type,
-      inputMetadata: fileMetadata ?? { truncatedContent: content.substring(0, 100) },
+      inputMetadata: fileMetadata ?? { truncatedContent: content.substring(0, 150) },
       riskScore: finalRisk,
       confidenceScore: finalConfidence,
-      classification: llmOutput.classification,
+      heuristicScore: baseHeuristicScore,
+      classification: finalClassification,
       attackerIntent: llmOutput.attacker_intent,
       explanation: llmOutput.explanation,
-      evidence: [
-        ...fileHeuristics.map((h) => ({
-          type: h.type,
-          severity: h.severity,
-          title: h.title,
-          description: h.description,
-        })),
-        ...llmOutput.evidence,
-      ],
-      dnaTags: uniqueDnaTags,
+      analysisStatus,
+      analysisSource,
+      failureCode: failureReasonCode,
+      hasDisagreement,
+      evidence: llmOutput.evidence,
+      dnaTags: normalizedDnaTags,
       dnaOverlap,
-      recommendedAction: action,
+      recommendedAction: finalAction,
       createdAt: new Date(),
     };
 
@@ -181,7 +249,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ id: result.insertedId, result: scanDoc, dnaMatch });
   } catch (error: unknown) {
-    console.error('Investigation Pipeline Error:', (error as Error).message);
+    console.error('[ShieldSense/API] Investigation Pipeline Error:', (error as Error).message);
     return NextResponse.json(
       { error: 'An unexpected error occurred during investigation. Please try again.' },
       { status: 500 }

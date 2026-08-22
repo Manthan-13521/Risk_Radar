@@ -28,5 +28,5 @@ if (process.env.NODE_ENV === 'development') {
 export default clientPromise;
 export async function getDb(): Promise<Db> {
   const client = await clientPromise;
-  return client.db('shieldsense');
+  return client.db();
 }

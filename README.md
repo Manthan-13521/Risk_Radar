@@ -2,7 +2,7 @@
 
 > **Antivirus detects files. ShieldSense investigates attacks.**
 
-ShieldSense is an AI-powered behavioral security investigation platform that evaluates suspicious links, messages, and files. Rather than relying on simple URL blocklists or black-box safety scores, ShieldSense extracts heuristic signals, reasons about **Attacker Intent**, calculates deterministic **Risk and Confidence**, surfaces plain-language **Evidence**, remembers behavioral attack patterns through **Threat DNA**, and recommends confidence-aware response actions.
+ShieldSense is a hybrid cybersecurity investigation assistant that combines deterministic structural heuristics, deep URL/message feature extraction, structured LLM reasoning, and calibrated policy engines to investigate suspicious links, messages, and files. ShieldSense analyzes contextual signals, reasons about **Attacker Intent**, calculates deterministic **Risk and Confidence**, surfaces plain-language **Evidence**, remembers behavioral attack patterns through **Threat DNA**, and recommends confidence-aware response actions.
 
 ### 🛠️ Built With & Deployed On
 

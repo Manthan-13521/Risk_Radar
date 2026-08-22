@@ -1,0 +1,252 @@
+[
+  {
+    "id": "SAFE-URL-01",
+    "type": "url",
+    "content": "https://www.google.com/",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Clean search engine URL on trusted domain"
+  },
+  {
+    "id": "SAFE-URL-02",
+    "type": "url",
+    "content": "https://github.com/",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Developer platform on trusted domain"
+  },
+  {
+    "id": "SAFE-URL-03",
+    "type": "url",
+    "content": "https://openai.com/",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "AI research platform on trusted domain"
+  },
+  {
+    "id": "SAFE-URL-04",
+    "type": "url",
+    "content": "https://www.microsoft.com/",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Official enterprise portal on trusted domain"
+  },
+  {
+    "id": "SAFE-URL-05",
+    "type": "url",
+    "content": "https://apple.com/iphone",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Official consumer technology product page"
+  },
+  {
+    "id": "SAFE-MSG-01",
+    "type": "message",
+    "content": "Hi team, tomorrow's project meeting has been moved to 4 PM. Please use the usual calendar invitation.",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Routine internal meeting rescheduling note"
+  },
+  {
+    "id": "SAFE-MSG-02",
+    "type": "message",
+    "content": "Your GitHub repository received a new pull request. Please review it when convenient.",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Benign code review notification"
+  },
+  {
+    "id": "SAFE-MSG-03",
+    "type": "message",
+    "content": "Your monthly report is ready in the normal company portal.",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Standard business portal notification"
+  },
+  {
+    "id": "SAFE-MSG-04",
+    "type": "message",
+    "content": "Reminder: your calendar event starts at 3 PM in Conference Room B.",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Clean calendar reminder"
+  },
+  {
+    "id": "SAFE-MSG-05",
+    "type": "message",
+    "content": "Your order has been shipped. You can view delivery information from your normal account.",
+    "expectedClassification": "safe",
+    "expectedRiskMax": 25,
+    "description": "Benign shipping notification with no suspicious links"
+  },
+  {
+    "id": "SUSP-URL-01",
+    "type": "url",
+    "content": "https://example.invalid/account/update",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 25,
+    "expectedRiskMax": 65,
+    "description": "Account update path without brand impersonation"
+  },
+  {
+    "id": "SUSP-URL-02",
+    "type": "url",
+    "content": "https://example.invalid/payment/confirm",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 25,
+    "expectedRiskMax": 65,
+    "description": "Payment confirmation path without brand signals"
+  },
+  {
+    "id": "SUSP-URL-03",
+    "type": "url",
+    "content": "http://fileshare-portal.net/files/download",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 10,
+    "expectedRiskMax": 65,
+    "description": "Insecure HTTP file download link on unverified domain"
+  },
+  {
+    "id": "SUSP-URL-04",
+    "type": "url",
+    "content": "https://corporate-portal-access.net/security/settings",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 15,
+    "expectedRiskMax": 65,
+    "description": "Generic security settings URL on unverified domain"
+  },
+  {
+    "id": "SUSP-URL-05",
+    "type": "url",
+    "content": "https://service-status-notice.xyz/",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 20,
+    "expectedRiskMax": 65,
+    "description": "Suspicious TLD with generic status notice"
+  },
+  {
+    "id": "SUSP-MSG-01",
+    "type": "message",
+    "content": "Your invoice is ready. Please review the payment details when convenient.",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 15,
+    "expectedRiskMax": 55,
+    "description": "Financial context without artificial urgency"
+  },
+  {
+    "id": "SUSP-MSG-02",
+    "type": "message",
+    "content": "Please sign in to your dashboard to review pending compliance items.",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 15,
+    "expectedRiskMax": 55,
+    "description": "General sign-in request without high urgency"
+  },
+  {
+    "id": "SUSP-MSG-03",
+    "type": "message",
+    "content": "We noticed a login from a new device. If this was you, no action is needed.",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 15,
+    "expectedRiskMax": 55,
+    "description": "Informational security notification"
+  },
+  {
+    "id": "SUSP-MSG-04",
+    "type": "message",
+    "content": "Your subscription will renew next week. Manage your billing preferences in settings.",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 15,
+    "expectedRiskMax": 55,
+    "description": "Billing reminder with payment context"
+  },
+  {
+    "id": "SUSP-MSG-05",
+    "type": "message",
+    "content": "Action requested: Update your profile information before the end of the quarter.",
+    "expectedClassification": "suspicious",
+    "expectedRiskMin": 15,
+    "expectedRiskMax": 55,
+    "description": "Mild urgency for profile maintenance"
+  },
+  {
+    "id": "HIGH-URL-01",
+    "type": "url",
+    "content": "https://paypa1-security.example.invalid/login",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 60,
+    "description": "Homoglyph PayPal lookalike with login path"
+  },
+  {
+    "id": "HIGH-URL-02",
+    "type": "url",
+    "content": "https://secure-bank-verification.example.invalid/kyc/verify",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 55,
+    "description": "Fake bank verification with KYC path"
+  },
+  {
+    "id": "HIGH-URL-03",
+    "type": "url",
+    "content": "http://192.0.2.1/account/verify",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 55,
+    "description": "Direct IP host over HTTP with verify path"
+  },
+  {
+    "id": "HIGH-URL-04",
+    "type": "url",
+    "content": "https://g00gle-security.example.invalid/account/recovery",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 60,
+    "description": "Homoglyph Google lookalike with recovery path"
+  },
+  {
+    "id": "HIGH-URL-05",
+    "type": "url",
+    "content": "https://amazon-delivery.example.invalid/payment/confirm",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 55,
+    "description": "Brand impersonation with delivery and payment path"
+  },
+  {
+    "id": "HIGH-MSG-01",
+    "type": "message",
+    "content": "URGENT: Your bank account will be suspended in 2 hours. Verify your password and OTP immediately.",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 60,
+    "description": "High urgency credential theft message"
+  },
+  {
+    "id": "HIGH-MSG-02",
+    "type": "message",
+    "content": "FINAL WARNING: Enter your security code immediately or your account will be disabled.",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 60,
+    "description": "Account suspension threat demanding authentication code"
+  },
+  {
+    "id": "HIGH-MSG-03",
+    "type": "message",
+    "content": "Congratulations! You won ₹25,00,000. Pay ₹2,499 processing fee immediately to claim your prize.",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 65,
+    "description": "Advance-fee lottery scam message"
+  },
+  {
+    "id": "HIGH-MSG-04",
+    "type": "message",
+    "content": "Your parcel is waiting. Pay ₹49 immediately now to prevent cancellation of delivery.",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 55,
+    "description": "Delivery lure demanding immediate payment"
+  },
+  {
+    "id": "HIGH-MSG-05",
+    "type": "message",
+    "content": "Your SBI account is blocked. Click here to verify your KYC credentials immediately: https://sbi-kyc-update.xyz/login",
+    "expectedClassification": "dangerous",
+    "expectedRiskMin": 70,
+    "description": "Combined banking phishing lure with suspicious TLD and login"
+  }
+]

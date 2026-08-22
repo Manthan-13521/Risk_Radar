@@ -13,6 +13,19 @@ export const DNA_TAGS = [
   'MALWARE_DELIVERY',
   'PERSONAL_DATA_REQUEST',
   'REDIRECT_SCAM',
+  'FINANCIAL_SCAM',
+  'IP_HOST',
+  'CREDENTIAL_PATH',
+  'PAYMENT_PATH',
+  'SECURITY_PATH',
+  'SUSPICIOUS_TLD',
+  'EXCESSIVE_SUBDOMAINS',
+  'ENCODED_URL',
+  'EMBEDDED_CREDENTIALS',
+  'INSECURE_HTTP',
+  'DOUBLE_EXTENSION',
+  'EXECUTABLE_FILE',
+  'MACRO_CAPABLE_FILE',
 ];
 
 export interface DnaMatch {
@@ -22,15 +35,23 @@ export interface DnaMatch {
   previousIntent: string;
 }
 
-export function normalizeTag(tag: string): string {
+const INVALID_TAGS = new Set(['UNANALYZED', 'UNKNOWN', 'ERROR', 'FALLBACK', 'EMPTY', 'NONE', 'N/A']);
+
+export function normalizeTag(tag: string): string | null {
+  if (!tag) return null;
   const upper = tag.toUpperCase().replace(/[\s-]/g, '_');
+  if (INVALID_TAGS.has(upper)) return null;
+
   if (DNA_TAGS.includes(upper)) return upper;
   if (upper.includes('CREDENTIAL')) return 'CREDENTIAL_REQUEST';
-  if (upper.includes('PAYMENT')) return 'PAYMENT_REQUEST';
+  if (upper.includes('PAYMENT') || upper.includes('FINANCIAL')) return 'PAYMENT_REQUEST';
   if (upper.includes('URGEN')) return 'URGENCY';
+  if (upper.includes('LOOKALIKE')) return 'LOOKALIKE_DOMAIN';
   if (upper.includes('BRAND')) return upper.includes('MISMATCH') ? 'BRAND_MISMATCH' : 'BRAND_IMPERSONATION';
-  if (upper.includes('URL') || upper.includes('LINK')) return 'SUSPICIOUS_URL';
   if (upper.includes('DELIVERY')) return 'DELIVERY_SCAM';
+  if (upper.includes('IP')) return 'IP_HOST';
+  if (upper.includes('URL') || upper.includes('LINK')) return 'SUSPICIOUS_URL';
+  
   return upper;
 }
 
@@ -45,12 +66,20 @@ function jaccardSimilarity(a: string[], b: string[]): number {
 
 /**
  * Find the best DNA match among recent stored scans.
- * Called BEFORE the current scan is inserted, so the result set
- * will never include the current scan.
+ * CRITICAL RULE: Requires at least 2 meaningful tags on both scans!
+ * Empty or UNANALYZED tags are never matched.
  */
 export async function findSimilarDNA(newTagsRaw: string[]): Promise<DnaMatch[]> {
-  const newTags = Array.from(new Set(newTagsRaw.map(normalizeTag)));
-  if (newTags.length === 0) return [];
+  const newTags = Array.from(
+    new Set(
+      newTagsRaw
+        .map(normalizeTag)
+        .filter((t): t is string => Boolean(t) && !INVALID_TAGS.has(t as string))
+    )
+  );
+
+  // Require at least 2 meaningful tags for any similarity comparison
+  if (newTags.length < 2) return [];
 
   const db = await getDb();
   const recent = await db
@@ -62,11 +91,24 @@ export async function findSimilarDNA(newTagsRaw: string[]): Promise<DnaMatch[]> 
 
   const matches: DnaMatch[] = recent
     .map((scan) => {
-      const scanTags: string[] = scan.dnaTags ?? [];
-      if (scanTags.length === 0) return null;
+      const rawTags: string[] = scan.dnaTags ?? [];
+      const scanTags = Array.from(
+        new Set(
+          rawTags
+            .map(normalizeTag)
+            .filter((t): t is string => Boolean(t) && !INVALID_TAGS.has(t as string))
+        )
+      );
+
+      // Must have at least 2 meaningful tags in historical scan as well
+      if (scanTags.length < 2) return null;
+
       const overlapPercent = jaccardSimilarity(newTags, scanTags);
       if (overlapPercent < 50) return null;
+
       const sharedTags = scanTags.filter((t: string) => newTags.includes(t));
+      if (sharedTags.length < 2) return null;
+
       return {
         scanId: scan._id.toString(),
         overlapPercent,
@@ -98,12 +140,17 @@ export async function getPatternStats() {
   const patternOccurrences: Record<string, { tags: string[]; count: number; lastDetected: Date }> = {};
 
   for (const scan of scans) {
-    const tags: string[] = scan.dnaTags ?? [];
-    if (tags.length === 0) continue;
-    for (const t of tags) {
+    const rawTags: string[] = scan.dnaTags ?? [];
+    const validTags = rawTags
+      .map(normalizeTag)
+      .filter((t): t is string => Boolean(t) && !INVALID_TAGS.has(t as string));
+
+    if (validTags.length === 0) continue;
+
+    for (const t of validTags) {
       tagCounts[t] = (tagCounts[t] ?? 0) + 1;
     }
-    const sortedTags = [...tags].sort();
+    const sortedTags = Array.from(new Set(validTags)).sort();
     const key = sortedTags.join(',');
     if (patternOccurrences[key]) {
       patternOccurrences[key].count++;

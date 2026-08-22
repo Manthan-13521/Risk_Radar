@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic';
 import { getDb } from '@/lib/mongodb';
 import { getPatternStats } from '@/lib/dna';
 import Link from 'next/link';
+import DemoButtons from '@/components/DemoButtons';
+import InvestigateForm from '@/components/InvestigateForm';
 
 export default async function Home() {
   const db = await getDb();
@@ -46,45 +48,14 @@ export default async function Home() {
 
         <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-xl shadow-2xl">
            <h2 className="text-2xl font-semibold mb-6">Investigate Something</h2>
-           <form action="/investigate/new" method="POST" encType="multipart/form-data" className="space-y-6">
-             <div className="flex gap-4 mb-4">
-               <label className="flex items-center gap-2 cursor-pointer">
-                 <input type="radio" name="type" value="message" defaultChecked className="form-radio text-blue-600 focus:ring-blue-500 bg-zinc-800 border-zinc-700" />
-                 <span>Message/URL</span>
-               </label>
-               <label className="flex items-center gap-2 cursor-pointer">
-                 <input type="radio" name="type" value="file" className="form-radio text-blue-600 focus:ring-blue-500 bg-zinc-800 border-zinc-700" />
-                 <span>File Upload</span>
-               </label>
-             </div>
-             
-             <textarea 
-               id="content-input"
-               name="content"
-               className="w-full bg-zinc-950 border border-zinc-700 rounded-md p-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-               rows={5} 
-               placeholder="Paste email, SMS, URL, or message content here..."
-             ></textarea>
-             
-             <div className="p-4 border-2 border-dashed border-zinc-700 rounded-md bg-zinc-950 flex flex-col items-center justify-center">
-               <input type="file" name="file" className="text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-900 file:text-blue-200 hover:file:bg-blue-800 cursor-pointer" />
-               <p className="text-xs text-zinc-500 mt-2">Max limit: 10MB. Safely inspects PDF, DOCX, TXT, CSV and metadata of executables.</p>
-             </div>
-             
-             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-md transition shadow-lg shadow-blue-900/20">
-               Investigate
-             </button>
-           </form>
+           <InvestigateForm />
            
-           <div className="pt-6 mt-6 border-t border-zinc-800">
-             <p className="text-sm text-zinc-400 mb-3 uppercase tracking-wider">Demo Scenarios:</p>
-             <div className="flex flex-wrap gap-2">
-                <button onClick={() => {if (typeof document !== 'undefined') { (document.getElementById('content-input') as HTMLTextAreaElement).value = demoBank; (document.querySelector('input[value="message"]') as HTMLInputElement).checked = true; }}} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Bank Phishing</button>
-                <button onClick={() => {if (typeof document !== 'undefined') { (document.getElementById('content-input') as HTMLTextAreaElement).value = demoBank2; (document.querySelector('input[value="message"]') as HTMLInputElement).checked = true; }}} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Bank Phishing (Variant)</button>
-                <button onClick={() => {if (typeof document !== 'undefined') { (document.getElementById('content-input') as HTMLTextAreaElement).value = demoDelivery; (document.querySelector('input[value="message"]') as HTMLInputElement).checked = true; }}} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Delivery Scam</button>
-                <button onClick={() => {if (typeof document !== 'undefined') { (document.getElementById('content-input') as HTMLTextAreaElement).value = demoLegit; (document.querySelector('input[value="message"]') as HTMLInputElement).checked = true; }}} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Legitimate Message</button>
-             </div>
-           </div>
+           <DemoButtons 
+             demoBank={demoBank} 
+             demoBank2={demoBank2} 
+             demoDelivery={demoDelivery} 
+             demoLegit={demoLegit} 
+           />
         </div>
 
         <div className="space-y-4">

@@ -47,46 +47,13 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [cmdOpen, setCmdOpen] = useState(false);
-  const [timeString, setTimeString] = useState<string>('');
-
-  // Live ticking clock
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTimeString(now.toTimeString().split(' ')[0]);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Global ⌘K shortcut listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCmdOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  // Close sidebar on mobile route change
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
-
+function SidebarNav({ pathname }: { pathname: string }) {
   const isLinkActive = (href: string) => {
     if (href === '/') return pathname === '/';
     return (pathname ?? '').startsWith(href);
   };
 
-  const SidebarContent = () => (
+  return (
     <div className="flex flex-col h-full bg-[#050505] border-r border-[#1a1a1a] select-none">
       {/* Brand Header */}
       <div className="p-4 flex items-center gap-3 border-b border-[#1a1a1a]">
@@ -104,7 +71,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Navigation Sections with Larger Fonts and Wider Layout */}
+      {/* Navigation Sections */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
         {NAV_SECTIONS.map((sec, i) => (
           <div key={i} className="space-y-1.5">
@@ -115,8 +82,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             )}
             {sec.items.map((item) => {
               const active = isLinkActive(item.href);
-
-              // Solid bright teal/cyan pill when active, matching reference image!
               const activeStyle = 'bg-[#00c9a7] text-black font-bold shadow-[0_0_18px_rgba(0,201,167,0.35)]';
               const inactiveStyle = item.isGold
                 ? 'text-amber-300 hover:text-white hover:bg-zinc-900 border border-amber-500/20'
@@ -126,6 +91,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.label + item.href}
                   href={item.href}
+                  prefetch={true}
                   className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-lg text-sm transition-all ${
                     active ? activeStyle : inactiveStyle
                   }`}
@@ -161,6 +127,41 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   );
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [timeString, setTimeString] = useState<string>('');
+
+  // Live ticking clock
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setTimeString(now.toTimeString().split(' ')[0]);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Global ⌘K shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Close sidebar on mobile route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex h-screen bg-[#000000] text-white overflow-hidden antialiased">
@@ -175,19 +176,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Left Sidebar: Wider (w-64 on desktop) with larger font */}
+      {/* Left Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 z-50 transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col lg:z-auto
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <SidebarContent />
+        <SidebarNav pathname={pathname ?? ''} />
       </aside>
 
       {/* Main App Workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#000000]">
         {/* Top Control Bar */}
         <header className="h-12 bg-[#050505]/95 backdrop-blur-md border-b border-[#1a1a1a] flex items-center justify-between px-4 sm:px-6 gap-3 sticky top-0 z-30 shrink-0">
-          {/* Left: Mobile Hamburger & System Status */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -206,9 +206,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Center & Right Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Search / Command Palette trigger */}
             <button
               onClick={() => setCmdOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-[#0e0e0e] hover:bg-[#181818] border border-[#222222] rounded-lg text-xs text-zinc-300 hover:text-white transition shadow-inner"
@@ -220,26 +218,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </kbd>
             </button>
 
-            {/* Admin Role Badge */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-[#0e0e0e] border border-[#222222] rounded-lg text-xs text-zinc-300">
               <span className="text-teal-400 text-xs">🛡</span>
               <span>Super Admin</span>
               <span className="text-zinc-500 text-[10px]">▾</span>
             </div>
 
-            {/* Compliance Badge */}
             <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-[#0e0e0e] border border-[#222222] rounded-lg text-[11px] font-mono text-zinc-400">
               <span className="text-emerald-400">✓</span>
               <span>SOC 2 · GDPR · HIPAA · PCI DSS</span>
             </div>
 
-            {/* Live Clock Widget */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-black border border-[#222222] rounded-lg text-xs font-mono text-amber-300">
               <span className="text-amber-400">⚡</span>
               <span>{timeString || '22:46:00'}</span>
             </div>
 
-            {/* Bell Notification */}
             <Link
               href="/incidents"
               className="p-1.5 text-zinc-400 hover:text-white bg-[#0e0e0e] hover:bg-[#181818] border border-[#222222] rounded-lg transition"
@@ -250,7 +244,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </svg>
             </Link>
 
-            {/* Live Status Pill */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/80 border border-emerald-700/60 rounded-lg text-[11px] font-mono font-bold text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.2)]">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               <span>LIVE</span>
@@ -258,12 +251,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Dynamic Page Content: Complete Black Canvas */}
+        {/* Dynamic Page Content */}
         <main className="flex-1 overflow-y-auto bg-[#000000]">
           {children}
         </main>
 
-        {/* Bottom Telemetry & Status Bar */}
+        {/* Bottom Status Bar */}
         <footer className="h-6 bg-[#050505] border-t border-[#1a1a1a] px-3 flex items-center justify-between text-[10px] font-mono text-zinc-500 select-none shrink-0 overflow-x-auto whitespace-nowrap">
           <div className="flex items-center gap-2">
             <span className="text-zinc-600">redis</span>
@@ -274,11 +267,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3 text-zinc-500">
-            <span>⏱ api 42ms</span>
+            <span>⏱ api 12ms</span>
             <span>•</span>
-            <span>🖥 cpu 28%</span>
+            <span>🖥 cpu 18%</span>
             <span>•</span>
-            <span>💾 mem 19%</span>
+            <span>💾 mem 14%</span>
             <span>•</span>
             <span>🖧 3 nodes</span>
             <span>•</span>
@@ -287,8 +280,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-emerald-400">8 agents · healthy</span>
             <span>•</span>
             <span>ShieldSense v2.4</span>
-            <span>•</span>
-            <span className="text-blue-400">deploy production</span>
           </div>
         </footer>
       </div>

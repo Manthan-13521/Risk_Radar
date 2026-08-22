@@ -20,10 +20,17 @@ export interface SecurityPosture {
   status: 'HEALTHY' | 'WATCH' | 'DEGRADED' | 'CRITICAL';
 }
 
+let cachedStats: { data: DashboardStats; timestamp: number } | null = null;
+const CACHE_TTL_MS = 3000; // 3-second cache for instant page loads
+
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const now = Date.now();
+  if (cachedStats && now - cachedStats.timestamp < CACHE_TTL_MS) {
+    return cachedStats.data;
+  }
+
   const db = await getDb();
-  const now = new Date();
-  const startOfDay = new Date(now);
+  const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
   const [totalScans, todayScans, classificationCounts, recentScans, dnaTagData] = await Promise.all([
@@ -61,7 +68,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     dangerous: s.classification === 'dangerous' || s.classification === 'critical' ? 1 : 0,
   }));
 
-  return {
+  const data: DashboardStats = {
     totalScans,
     todayScans,
     threatsDetected,
@@ -80,6 +87,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       critical: counts.critical || 0,
     },
   };
+
+  cachedStats = { data, timestamp: now };
+  return data;
 }
 
 export function calculateSecurityPosture(stats: DashboardStats): SecurityPosture {

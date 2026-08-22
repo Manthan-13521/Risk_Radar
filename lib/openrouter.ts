@@ -3,7 +3,7 @@
  *
  * Failure codes (never collapses into one generic fallback):
  *   AI_CONFIG_MISSING  — OPENROUTER_API_KEY not set
- *   AI_PROVIDER_ERROR  — HTTP error from OpenRouter (4xx/5xx)
+ *   AI_PROVIDER_ERROR  — HTTP error from OpenRouter (4xx/5xx / timeout)
  *   AI_SCHEMA_ERROR    — Response JSON failed Zod validation
  *   AI_MODEL_ERROR     — Model returned empty / malformed content
  */
@@ -69,9 +69,6 @@ export async function callLLM(
   const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
 
   if (!apiKey) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[ShieldSense/LLM] Diagnostic: AI_CONFIG_MISSING — OPENROUTER_API_KEY is not set');
-    }
     return { output: null, failureCode: 'AI_CONFIG_MISSING' };
   }
 
@@ -88,12 +85,9 @@ ${content.substring(0, 3000)}
 
 Analyze the above evidence and return a JSON verdict.`;
 
-  if (process.env.NODE_ENV === 'development') {
-    console.info(`[ShieldSense/LLM] Request started — model: ${model}`);
-  }
-
   let res: Response;
   try {
+    // 5-second max timeout on LLM request for fast performance
     res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -109,31 +103,18 @@ Analyze the above evidence and return a JSON verdict.`;
           { role: 'user', content: userMessage },
         ],
         response_format: { type: 'json_object' },
-        max_tokens: 1500,
+        max_tokens: 1200,
         temperature: 0.1,
       }),
+      signal: AbortSignal.timeout(5000),
     });
   } catch (networkErr: unknown) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[ShieldSense/LLM] Diagnostic: AI_PROVIDER_ERROR — network fetch failed:', (networkErr as Error).message);
-    }
+    console.warn('[ShieldSense/LLM] AI provider timeout or fetch error — falling back to deterministic heuristics engine:', (networkErr as Error).message);
     return { output: null, failureCode: 'AI_PROVIDER_ERROR' };
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.info(`[ShieldSense/LLM] Response received — HTTP status: ${res.status}`);
-  }
-
   if (!res.ok) {
-    if (process.env.NODE_ENV === 'development') {
-      let bodySnippet = '';
-      try {
-        const errBody = await res.text();
-        bodySnippet = errBody.substring(0, 200);
-      } catch { /* ignore */ }
-      console.error(`[ShieldSense/LLM] Diagnostic: AI_PROVIDER_ERROR — HTTP ${res.status}: ${bodySnippet}`);
-    }
-    if (res.status === 503 || res.status === 404) {
+    if (res.status === 503 || res.status === 404 || res.status === 429) {
       return { output: null, failureCode: 'AI_MODEL_ERROR' };
     }
     return { output: null, failureCode: 'AI_PROVIDER_ERROR' };
@@ -143,45 +124,25 @@ Analyze the above evidence and return a JSON verdict.`;
   try {
     data = (await res.json()) as Record<string, unknown>;
   } catch {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[ShieldSense/LLM] Diagnostic: AI_MODEL_ERROR — response body is not valid JSON');
-    }
     return { output: null, failureCode: 'AI_MODEL_ERROR' };
   }
 
   const choices = data.choices as Array<{ message?: { content?: string } }> | undefined;
   const contentText = choices?.[0]?.message?.content;
   if (!contentText) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[ShieldSense/LLM] Diagnostic: AI_MODEL_ERROR — choices[0].message.content is empty');
-    }
     return { output: null, failureCode: 'AI_MODEL_ERROR' };
-  }
-
-  if (process.env.NODE_ENV === 'development') {
-    console.info('[ShieldSense/LLM] Structured output received, running Zod validation...');
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(contentText);
   } catch {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[ShieldSense/LLM] Diagnostic: AI_SCHEMA_ERROR — content is not valid JSON');
-    }
     return { output: null, failureCode: 'AI_SCHEMA_ERROR' };
   }
 
   const validation = LLMOutputSchema.safeParse(parsed);
   if (!validation.success) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[ShieldSense/LLM] Diagnostic: AI_SCHEMA_ERROR — Zod validation failed:', JSON.stringify(validation.error.issues));
-    }
     return { output: null, failureCode: 'AI_SCHEMA_ERROR' };
-  }
-
-  if (process.env.NODE_ENV === 'development') {
-    console.info('[ShieldSense/LLM] Zod validation passed ✓');
   }
 
   return { output: validation.data, failureCode: null };

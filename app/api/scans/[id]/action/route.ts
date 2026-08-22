@@ -11,11 +11,27 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: 'Invalid scan ID.' }, { status: 400 });
     }
 
-    const body = (await req.json()) as { action?: string };
-    const { action } = body;
+    // Support both JSON body AND HTML form submissions (application/x-www-form-urlencoded)
+    const contentType = req.headers.get('content-type') ?? '';
+    let action: string | undefined;
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const formData = await req.formData();
+      action = (formData.get('action') as string) ?? undefined;
+    } else {
+      try {
+        const body = (await req.json()) as { action?: string };
+        action = body.action;
+      } catch {
+        return NextResponse.json({ error: 'Invalid request body.' }, { status: 400 });
+      }
+    }
 
     if (!action || !VALID_ACTIONS.has(action)) {
-      return NextResponse.json({ error: 'Invalid action. Must be allow, warn, quarantine, or block.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid action. Must be allow, warn, quarantine, or block.' },
+        { status: 400 }
+      );
     }
 
     const db = await getDb();
@@ -26,6 +42,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: 'Scan not found.' }, { status: 404 });
+    }
+
+    // Redirect back to the investigation result page after form submission
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      return NextResponse.redirect(new URL(`/investigate/${id}`, req.url), 303);
     }
 
     return NextResponse.json({ success: true, actionTaken: action });

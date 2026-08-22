@@ -8,6 +8,7 @@
 <!-- Badges Row 1 — Live + Deployment -->
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-risk--radar--4yow.onrender.com-990011?style=for-the-badge&logo=googlechrome&logoColor=white)](https://risk-radar-4yow.onrender.com)
 [![Deployed on Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+[![Watch Demo](https://img.shields.io/badge/▶%20Watch%2040s%20Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](#demo-video)
 
 <!-- Badges Row 2 — Tech Stack -->
 [![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
@@ -17,6 +18,14 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
 </div>
+
+---
+
+## 🎬 Demo Video <a name="demo-video"></a>
+
+> One suspicious click. One investigation. One decision — before it's too late.
+
+https://github.com/Manthan-13521/Risk_Radar/raw/main/public/demo-video.mp4
 
 ---
 

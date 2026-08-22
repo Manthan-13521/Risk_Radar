@@ -45,7 +45,7 @@ const NAV: NavSection[] = [
     title: 'SYSTEM',
     items: [
       { label: 'Audit Logs', href: '/audit', icon: '◻' },
-      { label: 'Settings', href: '/settings', icon: '◈' },
+      { label: 'Settings', href: '/settings', icon: '⚙' },
     ],
   },
 ];
@@ -69,7 +69,7 @@ function isActive(pathname: string | null, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-function NavContent({ pathname }: { pathname: string | null }) {
+function NavContentExpanded({ pathname }: { pathname: string | null }) {
   return (
     <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-6">
       {NAV.map((sec) => (
@@ -111,9 +111,48 @@ function NavContent({ pathname }: { pathname: string | null }) {
   );
 }
 
+function NavContentCollapsed({ pathname }: { pathname: string | null }) {
+  return (
+    <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-4 flex flex-col items-center">
+      {NAV.map((sec, secIdx) => (
+        <div key={sec.title} className="w-full flex flex-col items-center space-y-1">
+          {secIdx > 0 && (
+            <div className="w-8 h-px my-1" style={{ background: '#C4B5B0' }} />
+          )}
+          {sec.items.map((item) => {
+            const active = isActive(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={true}
+                title={item.label}
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-mono font-extrabold transition-all group relative"
+                style={{
+                  background: active ? '#990011' : 'transparent',
+                  color: active ? '#ffffff' : item.isPrimary ? '#990011' : '#111111',
+                }}
+              >
+                <span>{item.icon}</span>
+                {/* Floating tooltip */}
+                <span
+                  className="fixed left-20 px-2.5 py-1 rounded-lg text-xs font-bold text-white shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap"
+                  style={{ background: '#111111' }}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [timeString, setTimeString] = useState('');
@@ -135,7 +174,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(v => !v); }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); setSidebarOpen(v => !v); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); setSidebarExpanded(v => !v); }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -147,7 +186,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setMobileDrawerOpen(v => !v);
     } else {
-      setSidebarOpen(v => !v);
+      setSidebarExpanded(v => !v);
     }
   };
 
@@ -188,7 +227,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ✕
           </button>
         </div>
-        <NavContent pathname={pathname} />
+        <NavContentExpanded pathname={pathname} />
         <div className="p-4 border-t shrink-0" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
@@ -203,48 +242,78 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Desktop Collapsible Sidebar */}
+      {/* Desktop Responsive Sidebar (Expands to w-72 or Collapses to w-[72px] Icon Rail) */}
       <aside
-        className={`hidden md:flex flex-col h-full border-r shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
-          sidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0 -translate-x-full pointer-events-none'
+        className={`hidden md:flex flex-col h-full border-r shrink-0 transition-all duration-300 ease-in-out ${
+          sidebarExpanded ? 'w-72' : 'w-[72px]'
         }`}
         style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
       >
-        <div className="h-16 flex items-center justify-between px-6 border-b shrink-0 min-w-[18rem]" style={{ borderColor: '#C4B5B0' }}>
-          <div className="flex items-center gap-3 min-w-0">
-            <RiskRadarLogo size={34} className="shrink-0" />
-            <div className="min-w-0">
-              <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
-              <div className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: '#554B49' }}>Digital Immune System</div>
+        {sidebarExpanded ? (
+          /* Full Expanded Header */
+          <div className="h-16 flex items-center justify-between px-5 border-b shrink-0" style={{ borderColor: '#C4B5B0' }}>
+            <div className="flex items-center gap-3 min-w-0">
+              <RiskRadarLogo size={32} className="shrink-0" />
+              <div className="min-w-0">
+                <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: '#554B49' }}>Digital Immune System</div>
+              </div>
             </div>
+            <button
+              onClick={() => setSidebarExpanded(false)}
+              className="p-1.5 rounded-xl border text-xs font-bold transition hover:bg-white/50 shrink-0"
+              style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
+              title="Collapse to Icon Rail (⌘B)"
+              aria-label="Collapse to Icon Rail"
+            >
+              ◀
+            </button>
           </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="p-2 rounded-xl border text-xs font-bold transition hover:bg-white/50 shrink-0"
-            style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
-            title="Collapse Sidebar (⌘B)"
-            aria-label="Collapse sidebar"
-          >
-            ◀
-          </button>
-        </div>
+        ) : (
+          /* Collapsed Icon Rail Header */
+          <div className="h-16 flex items-center justify-center border-b shrink-0" style={{ borderColor: '#C4B5B0' }}>
+            <button
+              onClick={() => setSidebarExpanded(true)}
+              title="Expand Sidebar (⌘B)"
+              className="p-1.5 rounded-xl hover:opacity-85 transition"
+            >
+              <RiskRadarLogo size={32} />
+            </button>
+          </div>
+        )}
 
-        <div className="flex-1 overflow-y-auto min-w-[18rem]">
-          <NavContent pathname={pathname} />
-        </div>
+        {/* Nav Body */}
+        {sidebarExpanded ? (
+          <NavContentExpanded pathname={pathname} />
+        ) : (
+          <NavContentCollapsed pathname={pathname} />
+        )}
 
-        <div className="p-4 border-t shrink-0 min-w-[18rem]" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
-            <div className="min-w-0">
-              <div className="text-sm font-bold truncate" style={{ color: '#111111' }}>Manthan Jaiswal</div>
-              <div className="flex items-center gap-1.5 text-[11px] font-bold" style={{ color: '#176B52' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                <span>SYSTEM OPERATIONAL</span>
+        {/* Footer */}
+        {sidebarExpanded ? (
+          <div className="p-4 border-t shrink-0" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
+              <div className="min-w-0">
+                <div className="text-sm font-bold truncate" style={{ color: '#111111' }}>Manthan Jaiswal</div>
+                <div className="flex items-center gap-1.5 text-[11px] font-bold" style={{ color: '#176B52' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  <span>SYSTEM OPERATIONAL</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-3 border-t shrink-0 flex justify-center" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs cursor-pointer"
+              style={{ background: '#990011' }}
+              title="Manthan Jaiswal · SYSTEM OPERATIONAL"
+            >
+              MJ
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* Main workspace */}
@@ -252,12 +321,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Top bar */}
         <header className="h-16 shrink-0 border-b flex items-center justify-between px-5 sm:px-8 gap-4" style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}>
           <div className="flex items-center gap-3">
-            {/* Top 3-Lines Button (Hamburger / Sidebar Toggle for Desktop & Mobile) */}
+            {/* Top 3-Lines Button (Hamburger / Rail Toggle) */}
             <button
               onClick={toggleSidebar}
               className="p-2.5 rounded-xl border transition hover:bg-white/50 flex items-center justify-center shadow-xs"
               style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#111111' }}
-              title={sidebarOpen ? "Toggle Sidebar" : "Open Sidebar (⌘B)"}
+              title={sidebarExpanded ? "Collapse Sidebar to Icon Rail (⌘B)" : "Expand Sidebar (⌘B)"}
               aria-label="Toggle navigation sidebar"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

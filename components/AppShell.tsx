@@ -113,7 +113,8 @@ function NavContent({ pathname }: { pathname: string | null }) {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [timeString, setTimeString] = useState('');
 
@@ -134,34 +135,43 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(v => !v); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); setSidebarOpen(v => !v); }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  useEffect(() => { setDrawerOpen(false); }, [pathname]);
+  useEffect(() => { setMobileDrawerOpen(false); }, [pathname]);
+
+  const toggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setMobileDrawerOpen(v => !v);
+    } else {
+      setSidebarOpen(v => !v);
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#ECE6E2' }}>
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
       {/* Mobile backdrop */}
-      {drawerOpen && (
+      {mobileDrawerOpen && (
         <div
-          className="fixed inset-0 z-40 md:hidden"
+          className="fixed inset-0 z-40 md:hidden transition-opacity duration-200"
           style={{ background: 'rgba(17,17,17,0.55)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setDrawerOpen(false)}
+          onClick={() => setMobileDrawerOpen(false)}
         />
       )}
 
       {/* Mobile Slide-Over Drawer */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-72 z-50 flex flex-col border-r transition-transform duration-200 md:hidden ${
-          drawerOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 bottom-0 w-72 z-50 flex flex-col border-r transition-transform duration-300 ease-in-out md:hidden ${
+          mobileDrawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
       >
-        <div className="h-16 flex items-center justify-between px-5 border-b" style={{ borderColor: '#C4B5B0' }}>
+        <div className="h-16 flex items-center justify-between px-5 border-b shrink-0" style={{ borderColor: '#C4B5B0' }}>
           <div className="flex items-center gap-3">
             <RiskRadarLogo size={32} />
             <div>
@@ -169,10 +179,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#554B49' }}>Digital Immune System</div>
             </div>
           </div>
-          <button onClick={() => setDrawerOpen(false)} className="p-1.5 rounded-lg" style={{ color: '#554B49' }}>✕</button>
+          <button
+            onClick={() => setMobileDrawerOpen(false)}
+            className="p-2 rounded-xl border font-bold text-xs"
+            style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
+            aria-label="Close sidebar"
+          >
+            ✕
+          </button>
         </div>
         <NavContent pathname={pathname} />
-        <div className="p-4 border-t" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
+        <div className="p-4 border-t shrink-0" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
             <div>
@@ -186,22 +203,37 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Collapsible Sidebar */}
       <aside
-        className="hidden md:flex flex-col w-72 h-full border-r shrink-0"
+        className={`hidden md:flex flex-col h-full border-r shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+          sidebarOpen ? 'w-72 opacity-100' : 'w-0 opacity-0 -translate-x-full pointer-events-none'
+        }`}
         style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}
       >
-        <div className="h-16 flex items-center gap-3 px-6 border-b shrink-0" style={{ borderColor: '#C4B5B0' }}>
-          <RiskRadarLogo size={34} className="shrink-0" />
-          <div className="min-w-0">
-            <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
-            <div className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: '#554B49' }}>Digital Immune System</div>
+        <div className="h-16 flex items-center justify-between px-6 border-b shrink-0 min-w-[18rem]" style={{ borderColor: '#C4B5B0' }}>
+          <div className="flex items-center gap-3 min-w-0">
+            <RiskRadarLogo size={34} className="shrink-0" />
+            <div className="min-w-0">
+              <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: '#554B49' }}>Digital Immune System</div>
+            </div>
           </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-2 rounded-xl border text-xs font-bold transition hover:bg-white/50 shrink-0"
+            style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
+            title="Collapse Sidebar (⌘B)"
+            aria-label="Collapse sidebar"
+          >
+            ◀
+          </button>
         </div>
 
-        <NavContent pathname={pathname} />
+        <div className="flex-1 overflow-y-auto min-w-[18rem]">
+          <NavContent pathname={pathname} />
+        </div>
 
-        <div className="p-4 border-t shrink-0" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
+        <div className="p-4 border-t shrink-0 min-w-[18rem]" style={{ borderColor: '#C4B5B0', background: '#E0D8D4' }}>
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: '#990011' }}>MJ</div>
             <div className="min-w-0">
@@ -220,16 +252,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Top bar */}
         <header className="h-16 shrink-0 border-b flex items-center justify-between px-5 sm:px-8 gap-4" style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}>
           <div className="flex items-center gap-3">
+            {/* Top 3-Lines Button (Hamburger / Sidebar Toggle for Desktop & Mobile) */}
             <button
-              onClick={() => setDrawerOpen(true)}
-              className="md:hidden p-1.5 rounded-lg"
-              style={{ color: '#554B49' }}
-              aria-label="Open navigation"
+              onClick={toggleSidebar}
+              className="p-2.5 rounded-xl border transition hover:bg-white/50 flex items-center justify-center shadow-xs"
+              style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#111111' }}
+              title={sidebarOpen ? "Toggle Sidebar" : "Open Sidebar (⌘B)"}
+              aria-label="Toggle navigation sidebar"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+
             <div>
               <div className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#554B49' }}>Risk_Radar</div>
               <div className="text-base font-extrabold leading-tight" style={{ color: '#111111' }}>{getTitle()}</div>
@@ -238,7 +273,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Subsystem status */}
-            <div className="hidden lg:flex items-center gap-3 px-3.5 py-2 rounded-xl border text-xs font-mono font-bold" style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}>
+            <div className="hidden lg:flex items-center gap-3 px-3.5 py-2 rounded-xl border text-xs font-mono font-bold shadow-xs" style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#176B52' }} />AI</span>
               <span style={{ color: '#C4B5B0' }}>·</span>
               <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: '#176B52' }} />DB</span>
@@ -249,7 +284,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* Search */}
             <button
               onClick={() => setCmdOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold transition hover:bg-white/40"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold transition hover:bg-white/40 shadow-xs"
               style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
             >
               <span>⌕</span>
@@ -258,14 +293,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Live clock */}
-            <div className="hidden sm:flex items-center px-3 py-2 rounded-xl border text-xs font-mono font-extrabold" style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#990011' }}>
+            <div className="hidden sm:flex items-center px-3 py-2 rounded-xl border text-xs font-mono font-extrabold shadow-xs" style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#990011' }}>
               {timeString}
             </div>
 
             {/* Incidents bell */}
             <Link
               href="/incidents"
-              className="p-2.5 rounded-xl border transition hover:bg-white/40"
+              className="p-2.5 rounded-xl border transition hover:bg-white/40 shadow-xs"
               style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
               title="Incidents"
             >

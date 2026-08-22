@@ -59,7 +59,7 @@ export default async function DashboardPage() {
           <div className="text-[11px] font-extrabold uppercase tracking-[0.2em]" style={{ color: '#990011' }}>
             Risk_Radar · Digital Immune System
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold leading-none tracking-tight" style={{ color: '#111111' }}>
+          <h1 className="text-4xl md:text-[62px] font-extrabold leading-[0.95] tracking-tight" style={{ color: '#111111' }}>
             INVESTIGATE<br />BEFORE YOU<br />INTERACT.
           </h1>
           <p className="text-base mt-3 max-w-lg font-medium" style={{ color: '#554B49' }}>

@@ -250,6 +250,38 @@ export async function POST(req: Request) {
       }
     }
 
+    // Send WhatsApp alert for suspicious/dangerous/critical scans (risk >= 30)
+    if (finalRisk >= 30) {
+      try {
+        const { shouldSendAlert, sendWhatsAppAlert } = await import('@/lib/whatsapp');
+        if (shouldSendAlert(finalRisk, finalAction)) {
+          const topEvidence = finalEvidence
+            .slice()
+            .sort((a: { severity: string }, b: { severity: string }) => {
+              const order = ['critical', 'high', 'medium', 'low'];
+              return order.indexOf(a.severity) - order.indexOf(b.severity);
+            })
+            .slice(0, 3)
+            .map((e: { title: string }) => e.title);
+
+          // Fire-and-forget — do not block API response
+          sendWhatsAppAlert({
+            riskScore: finalRisk,
+            confidenceScore: finalConfidence,
+            classification: finalClassification,
+            attackerIntent: attackerIntent,
+            topEvidence,
+            recommendedAction: finalAction,
+            scanId: insertedId.toString(),
+          }).catch((err: unknown) =>
+            console.error('[WhatsApp] Alert failed:', (err as Error).message)
+          );
+        }
+      } catch (e) {
+        console.error('[WhatsApp] Alert setup failed:', (e as Error).message);
+      }
+    }
+
     // Record audit event
     try {
       const { logAuditEvent } = await import('@/lib/audit-service');

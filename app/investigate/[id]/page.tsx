@@ -141,7 +141,14 @@ export default async function InvestigationResult({ params }: { params: { id: st
       </div>
 
       {/* Voice Verdict Briefing */}
-      <VoiceVerdict investigationId={params.id} voiceText={voiceText} />
+      <VoiceVerdict
+        investigationId={params.id}
+        voiceText={voiceText}
+        riskScore={scan.riskScore}
+        classification={scan.classification}
+        attackerIntent={scan.attackerIntent ?? 'uncertain'}
+        recommendedAction={scan.recommendedAction}
+      />
 
       {/* Recommended Action Panel */}
       <div className="bg-[#0b101b] border border-zinc-800/80 p-5 md:p-6 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">

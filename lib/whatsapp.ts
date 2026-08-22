@@ -16,7 +16,7 @@ export interface WhatsAppAlertPayload {
 }
 
 const GRAPH_API_VERSION = 'v19.0';
-const ALERT_THRESHOLD_RISK = 60; // only alert for risk >= this
+const ALERT_THRESHOLD_RISK = 30; // alert for suspicious (30+), dangerous (60+), critical (80+)
 const ALERT_THRESHOLD_ACTIONS = new Set(['quarantine', 'block', 'warn']);
 
 export function shouldSendAlert(riskScore: number, recommendedAction: string): boolean {
@@ -39,19 +39,24 @@ function buildAlertText(payload: WhatsAppAlertPayload): string {
     : 'suspicious characteristics';
   const advice = formatActionAdvice(payload.recommendedAction);
 
+  const severityLabel =
+    payload.riskScore >= 80 ? '🔴 CRITICAL THREAT'
+    : payload.riskScore >= 60 ? '🟠 HIGH RISK'
+    : '🟡 SUSPICIOUS';
+
   return [
-    `🚨 *ShieldSense Security Alert*`,
+    `🚨 *Risk Detected — ShieldSense Alert*`,
     ``,
-    `A message you received has been flagged.`,
-    ``,
-    `*Risk:* ${payload.riskScore}/100`,
+    `${severityLabel}`,
+    `*Risk Score:* ${payload.riskScore}/100`,
     `*Confidence:* ${payload.confidenceScore}/100`,
+    ``,
     `*Likely Intent:* ${intent}`,
     `*Warning Signs:* ${evidenceLine}`,
     ``,
-    `⚠️ *${advice}*`,
+    `⚠️ *Action Required:* ${advice}`,
     ``,
-    `_This is a simulated security alert from ShieldSense (hackathon prototype)._`,
+    `_ShieldSense AI Security Firewall — hackathon prototype_`,
   ].join('\n');
 }
 

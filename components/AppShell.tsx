@@ -152,7 +152,7 @@ function NavContentCollapsed({ pathname }: { pathname: string | null }) {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [timeString, setTimeString] = useState('');
@@ -165,6 +165,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem('rr_sidebar_expanded');
+      if (saved !== null) {
+        setSidebarExpanded(saved === 'true');
+      }
+    } catch {
+      // ignore in SSR or restricted storage
+    }
+  }, []);
+
+  useEffect(() => {
     const tick = () => setTimeString(new Date().toTimeString().split(' ')[0]);
     tick();
     const id = setInterval(tick, 1000);
@@ -174,7 +185,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(v => !v); }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); setSidebarExpanded(v => !v); }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        setSidebarExpanded(v => {
+          const next = !v;
+          try { localStorage.setItem('rr_sidebar_expanded', String(next)); } catch {}
+          return next;
+        });
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -186,7 +204,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setMobileDrawerOpen(v => !v);
     } else {
-      setSidebarExpanded(v => !v);
+      setSidebarExpanded(prev => {
+        const next = !prev;
+        try { localStorage.setItem('rr_sidebar_expanded', String(next)); } catch {}
+        return next;
+      });
     }
   };
 
@@ -260,7 +282,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <button
-              onClick={() => setSidebarExpanded(false)}
+              onClick={() => {
+                setSidebarExpanded(false);
+                try { localStorage.setItem('rr_sidebar_expanded', 'false'); } catch {}
+              }}
               className="p-1.5 rounded-xl border text-xs font-bold transition hover:bg-white/50 shrink-0"
               style={{ background: '#E0D8D4', borderColor: '#C4B5B0', color: '#554B49' }}
               title="Collapse to Icon Rail (⌘B)"
@@ -273,7 +298,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           /* Collapsed Icon Rail Header */
           <div className="h-16 flex items-center justify-center border-b shrink-0" style={{ borderColor: '#C4B5B0' }}>
             <button
-              onClick={() => setSidebarExpanded(true)}
+              onClick={() => {
+                setSidebarExpanded(true);
+                try { localStorage.setItem('rr_sidebar_expanded', 'true'); } catch {}
+              }}
               title="Expand Sidebar (⌘B)"
               className="p-1.5 rounded-xl hover:opacity-85 transition"
             >

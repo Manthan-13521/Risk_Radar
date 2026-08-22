@@ -6,6 +6,8 @@ import { getIncidents } from '@/lib/incident-service';
 import InvestigateForm from '@/components/InvestigateForm';
 import { IncidentListWithDrawer } from '@/components/IncidentListWithDrawer';
 import { IncidentItem } from '@/components/IncidentDrawer';
+import DemoVideoPlayer from '@/components/DemoVideoPlayer';
+import FakeClickDemo from '@/components/FakeClickDemo';
 
 function clsStyle(cls: string): { bg: string; color: string } {
   if (cls === 'critical') return { bg: '#76000D', color: '#fff' };
@@ -44,10 +46,10 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-10" style={{ background: '#ECE6E2' }}>
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-12" style={{ background: '#ECE6E2' }}>
 
-      {/* HERO */}
-      <div className="space-y-5 pb-8 border-b" style={{ borderColor: '#C4B5B0' }}>
+      {/* ═══ HERO ═══ */}
+      <div className="space-y-5 pb-10 border-b" style={{ borderColor: '#C4B5B0' }}>
         <div className="space-y-2">
           <div className="text-[11px] font-extrabold uppercase tracking-[0.2em]" style={{ color: '#990011' }}>
             Risk_Radar · Digital Immune System
@@ -77,17 +79,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* HERO SCANNER */}
-      <div id="investigate-form-card" className="rounded-2xl border p-6 md:p-8 space-y-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
-        <div className="pb-4 border-b" style={{ borderColor: '#C4B5B0' }}>
-          <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Primary Investigation Interface</div>
-          <h2 className="text-xl font-extrabold" style={{ color: '#111111' }}>INVESTIGATE AN ARTIFACT</h2>
-          <p className="text-sm mt-0.5" style={{ color: '#554B49' }}>Paste a URL, message, email or suspicious content for immediate multi-engine analysis.</p>
-        </div>
-        <InvestigateForm showDemos={true} />
-      </div>
-
-      {/* SECURITY PULSE */}
+      {/* ═══ SECURITY PULSE METRICS ═══ */}
       <div>
         <div className="text-[11px] font-extrabold uppercase tracking-widest mb-4" style={{ color: '#554B49' }}>Security Pulse</div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -106,7 +98,50 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ACTIVE INCIDENT REPORTS (TOP 3 LINES + SIDE POPUP UNIT) */}
+      {/* ═══ PRIMARY INVESTIGATION INTERFACE ═══ */}
+      <div id="investigate-form-card" className="rounded-2xl border p-6 md:p-8 space-y-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+        <div className="pb-4 border-b" style={{ borderColor: '#C4B5B0' }}>
+          <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Primary Investigation Interface</div>
+          <h2 className="text-xl font-extrabold" style={{ color: '#111111' }}>INVESTIGATE AN ARTIFACT</h2>
+          <p className="text-sm mt-0.5" style={{ color: '#554B49' }}>Paste a URL, message, email or suspicious content for immediate multi-engine analysis.</p>
+        </div>
+        <InvestigateForm showDemos={true} />
+      </div>
+
+      {/* ═══ DEMO VIDEO SECTION ═══ */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+          <div>
+            <div className="text-[11px] font-extrabold uppercase tracking-[0.2em] mb-1.5" style={{ color: '#990011' }}>
+              Product Demo · 40 Seconds
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold leading-tight" style={{ color: '#111111' }}>
+              See Risk_Radar in Action
+            </h2>
+            <p className="text-sm mt-1.5 max-w-lg font-medium" style={{ color: '#554B49' }}>
+              One suspicious click. One investigation. One decision before it&apos;s too late.
+            </p>
+          </div>
+          <div
+            className="shrink-0 text-[10px] font-extrabold uppercase tracking-widest px-3.5 py-2 rounded-xl border self-start sm:self-auto"
+            style={{ background: 'rgba(153,0,17,0.07)', borderColor: 'rgba(153,0,17,0.2)', color: '#990011' }}
+          >
+            Watch how Risk_Radar investigates a suspicious banking URL.
+          </div>
+        </div>
+
+        {/* Video Player */}
+        <DemoVideoPlayer />
+
+        <p className="text-xs font-medium text-center" style={{ color: '#554B49' }}>
+          40 sec · Product Demo · No external links · All analysis runs on your own backend
+        </p>
+      </div>
+
+      {/* ═══ FAKE CLICK PHISHING DEMO ═══ */}
+      <FakeClickDemo />
+
+      {/* ═══ ACTIVE INCIDENT REPORTS ═══ */}
       {serializedIncidents.length > 0 && (
         <div className="rounded-2xl border p-6 md:p-8 space-y-4 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
           <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: '#C4B5B0' }}>
@@ -129,7 +164,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* RECENT + THREAT DNA */}
+      {/* ═══ RECENT + THREAT DNA ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Investigations */}
         <div className="rounded-xl border shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>

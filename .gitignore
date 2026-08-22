@@ -35,3 +35,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env
+
+# large media assets (served from public/ locally — too large for GitHub without LFS)
+public/*.mp4
+public/*.mov
+public/*.webm

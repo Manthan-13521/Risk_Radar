@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Replicate identical logic as lib/ for standalone Node.js evaluation
+// Standalone evaluator implementing identical logic to lib/heuristics.ts, lib/url-analysis.ts, lib/security-decision.ts
+
 const TRUSTED_DOMAINS = new Set([
   'google.com',
   'github.com',
@@ -18,8 +19,9 @@ function isTrustedDomain(hostname) {
   if (!hostname) return false;
   const cleanHost = hostname.toLowerCase().trim();
   if (TRUSTED_DOMAINS.has(cleanHost)) return true;
-  for (const domain of TRUSTED_DOMAINS) {
-    if (cleanHost.endsWith('.' + domain)) return true;
+  const list = Array.from(TRUSTED_DOMAINS);
+  for (let i = 0; i < list.length; i++) {
+    if (cleanHost.endsWith('.' + list[i])) return true;
   }
   return false;
 }
@@ -36,6 +38,8 @@ const KNOWN_BRANDS = [
   'icici',
   'axis',
   'bankofindia',
+  'github',
+  'openai',
   'bank',
 ];
 
@@ -160,7 +164,7 @@ function scoreUrlFeatures(features) {
 
   if (features.loginPath) {
     score += 20;
-    signals.push({ type: 'credential_path', severity: 'high', title: 'Login Path', description: 'Sensitive path' });
+    signals.push({ type: 'credential_path', severity: 'high', title: 'Login Path', description: 'Sensitive login path' });
   }
 
   if (features.verifyPath) {
@@ -204,6 +208,30 @@ function scoreUrlFeatures(features) {
 function extractSignals(content, type = 'message') {
   const signals = [];
   let score = 0;
+
+  if (type === 'file') {
+    const filename = content.toLowerCase();
+    const parts = filename.split('.');
+    if (parts.length > 2) {
+      const ext2 = '.' + parts[parts.length - 1];
+      const executables = ['.exe', '.app', '.dmg', '.bat', '.cmd', '.sh', '.ps1', '.js', '.vbs', '.jar', '.msi', '.scr'];
+      if (executables.includes(ext2)) {
+        score += 35;
+        signals.push({ type: 'double_extension', severity: 'high', title: 'Double Extension', description: 'Disguised executable extension' });
+      }
+    }
+    const executables = ['.exe', '.scr', '.bat', '.ps1', '.msi', '.vbs'];
+    if (executables.some(ext => filename.endsWith(ext))) {
+      score += 45;
+      signals.push({ type: 'executable_file', severity: 'critical', title: 'Executable File', description: 'Executable file format' });
+    }
+    const macros = ['.docm', '.xlsm', '.pptm'];
+    if (macros.some(ext => filename.endsWith(ext))) {
+      score += 30;
+      signals.push({ type: 'macro_capable_file', severity: 'medium', title: 'Macro Capable File', description: 'Macro-enabled document' });
+    }
+    return { signals, score: Math.max(0, Math.min(100, score)), urlFeatures: null };
+  }
 
   let targetUrl = '';
   if (type === 'url' || content.trim().startsWith('http://') || content.trim().startsWith('https://')) {
@@ -277,17 +305,115 @@ function extractSignals(content, type = 'message') {
   };
 }
 
-function determineAction(risk, confidence) {
-  if (risk < 30 && confidence >= 60) return 'allow';
-  if (risk >= 80 && confidence >= 70) return 'block';
-  if (risk >= 60 && confidence >= 50) return 'quarantine';
-  return 'warn';
+// Evaluate decision with Hard Safety Rules
+function evaluateDecision(heuristicScore, signals, inputType) {
+  const signalTypes = new Set(signals.map(s => s.type));
+
+  const hasIpHost = signalTypes.has('ip_host');
+  const hasLookalike = signalTypes.has('lookalike_domain');
+  const hasAuthPath = signalTypes.has('credential_path');
+  const hasPaymentPath = signalTypes.has('payment_path');
+  const hasSecurityPath = signalTypes.has('security_path');
+  const hasCredentialRequest = signalTypes.has('credential_request');
+  const hasUrgency = signalTypes.has('urgency');
+  const hasPaymentRequest = signalTypes.has('payment_request');
+  const hasDeliveryScam = signalTypes.has('delivery_scam');
+  const hasFinancialScam = signalTypes.has('financial_scam');
+  const hasDoubleExt = signalTypes.has('double_extension');
+  const hasExecutable = signalTypes.has('executable_file');
+  const hasMacro = signalTypes.has('macro_capable_file');
+  const hasSuspiciousTld = signalTypes.has('suspicious_tld');
+
+  let finalRisk = heuristicScore;
+  let forbidAllow = false;
+  let forceAction = null;
+
+  if (hasIpHost) {
+    finalRisk = Math.max(finalRisk, 65);
+    forbidAllow = true;
+  }
+  if (hasLookalike) {
+    finalRisk = Math.max(finalRisk, 70);
+    forbidAllow = true;
+  }
+  if (hasLookalike && (hasAuthPath || hasSecurityPath || hasPaymentPath)) {
+    finalRisk = Math.max(finalRisk, 85);
+    forbidAllow = true;
+    forceAction = 'block';
+  }
+  if (hasCredentialRequest && hasUrgency) {
+    finalRisk = Math.max(finalRisk, 65);
+    forbidAllow = true;
+    if (hasLookalike || hasSuspiciousTld) {
+      finalRisk = Math.max(finalRisk, 80);
+      forceAction = 'block';
+    }
+  }
+  if (hasPaymentRequest && (hasDeliveryScam || hasFinancialScam || (hasUrgency && hasPaymentPath))) {
+    finalRisk = Math.max(finalRisk, 75);
+    forbidAllow = true;
+    forceAction = 'quarantine';
+  }
+  if (hasDoubleExt || hasExecutable) {
+    finalRisk = Math.max(finalRisk, 80);
+    forbidAllow = true;
+    forceAction = 'quarantine';
+  }
+  if (hasMacro) {
+    finalRisk = Math.max(finalRisk, 40);
+    forbidAllow = true;
+  }
+
+  let finalClassification = 'safe';
+  if (finalRisk < 30 && !forbidAllow) {
+    finalClassification = 'safe';
+  } else if (finalRisk >= 80) {
+    finalClassification = 'critical';
+  } else if (finalRisk >= 60) {
+    finalClassification = 'dangerous';
+  } else {
+    finalClassification = 'suspicious';
+  }
+
+  let action = 'allow';
+  if (forceAction) {
+    action = forceAction;
+  } else if (finalClassification === 'safe' && !forbidAllow) {
+    action = 'allow';
+  } else if (finalClassification === 'critical') {
+    action = 'block';
+  } else if (finalClassification === 'dangerous') {
+    action = 'quarantine';
+  } else {
+    action = 'warn';
+  }
+
+  let intent = 'uncertain';
+  if (hasCredentialRequest || hasAuthPath || (hasLookalike && (hasAuthPath || hasSecurityPath))) {
+    intent = 'credential_theft';
+  } else if (hasPaymentRequest || hasPaymentPath || hasFinancialScam || hasDeliveryScam) {
+    intent = 'payment_fraud';
+  } else if (hasIpHost || hasSecurityPath) {
+    intent = 'account_takeover';
+  } else if (hasDoubleExt || hasExecutable || hasMacro) {
+    intent = 'malware_delivery';
+  } else if (hasLookalike) {
+    intent = 'identity_impersonation';
+  }
+
+  return {
+    finalRisk: Math.max(0, Math.min(100, finalRisk)),
+    finalClassification,
+    action,
+    intent,
+    forbidAllow,
+  };
 }
 
 function runEvaluation() {
   console.log('============================================================');
-  console.log(' SHIELDSENSE — HACKATHON REGRESSION EVALUATION');
-  console.log(' Deterministic Heuristic & Policy Calibration Benchmark');
+  console.log(' SHIELDSENSE — FINAL REGRESSION EVALUATION');
+  console.log(' Deterministic Security Decision Engine Benchmark');
   console.log('============================================================\n');
 
   const corpusPath = path.join(__dirname, '../tests/fixtures/security-cases.json');
@@ -298,12 +424,13 @@ function runEvaluation() {
   let failed = 0;
   let falsePositives = 0;
   let falseNegatives = 0;
+  let falseAllowCount = 0;
   let safeCorrect = 0;
   let totalSafe = 0;
-  let riskCorrect = 0;
-  let totalRisk = 0;
+  let totalHighRisk = 0;
+  let highRiskCorrect = 0;
 
-  console.log(`Evaluating ${testCases.length} synthetic cases...\n`);
+  console.log(`Evaluating ${testCases.length} golden test cases...\n`);
 
   for (const tc of testCases) {
     const heuristicData = extractSignals(tc.content, tc.type);
@@ -321,56 +448,68 @@ function runEvaluation() {
       }
     }
 
-    const calculatedRisk = heuristicData.score;
-    const action = determineAction(calculatedRisk, 85);
+    const decision = evaluateDecision(heuristicData.score, heuristicData.signals, tc.type);
 
     let testPassed = true;
 
-    if (tc.expectedRiskMax !== undefined && calculatedRisk > tc.expectedRiskMax) {
+    if (tc.expectedRiskMax !== undefined && decision.finalRisk > tc.expectedRiskMax) {
       testPassed = false;
     }
-    if (tc.expectedRiskMin !== undefined && calculatedRisk < tc.expectedRiskMin) {
+    if (tc.expectedRiskMin !== undefined && decision.finalRisk < tc.expectedRiskMin) {
       testPassed = false;
     }
 
     const isExpectedSafe = tc.expectedClassification === 'safe';
-    const isCalculatedSafe = calculatedRisk < 30;
+    const isExpectedHighRisk = tc.expectedClassification === 'dangerous' || tc.expectedClassification === 'critical';
 
     if (isExpectedSafe) {
       totalSafe++;
-      if (isCalculatedSafe) safeCorrect++;
-      else falsePositives++;
-    } else if (tc.expectedClassification === 'dangerous' || tc.expectedClassification === 'critical') {
-      totalRisk++;
-      if (calculatedRisk >= 50) riskCorrect++;
-      else falseNegatives++;
+      if (decision.action === 'allow' && decision.finalRisk < 30) {
+        safeCorrect++;
+      } else {
+        falsePositives++;
+      }
+    }
+
+    if (isExpectedHighRisk) {
+      totalHighRisk++;
+      if (decision.action === 'allow') {
+        falseAllowCount++;
+        testPassed = false;
+      }
+      if (decision.finalRisk >= 60) {
+        highRiskCorrect++;
+      } else {
+        falseNegatives++;
+      }
     }
 
     if (testPassed) {
       passed++;
-      console.log(`[PASS] ${tc.id.padEnd(14)} | Score: ${String(calculatedRisk).padStart(3)} | Action: ${action.padEnd(10)} | ${tc.description}`);
+      console.log(`[PASS] ${tc.id.padEnd(14)} | Risk: ${String(decision.finalRisk).padStart(3)}/100 | Class: ${decision.finalClassification.padEnd(10)} | Action: ${decision.action.padEnd(10)} | ${tc.description}`);
     } else {
       failed++;
-      console.log(`[FAIL] ${tc.id.padEnd(14)} | Score: ${String(calculatedRisk).padStart(3)} (Expected: ${tc.expectedRiskMin ?? 0}-${tc.expectedRiskMax ?? 100}) | ${tc.description}`);
+      console.log(`[FAIL] ${tc.id.padEnd(14)} | Risk: ${String(decision.finalRisk).padStart(3)} (Expected ${tc.expectedRiskMin}-${tc.expectedRiskMax}) | Action: ${decision.action} | ${tc.description}`);
     }
   }
 
   const safeAccuracy = totalSafe > 0 ? Math.round((safeCorrect / totalSafe) * 100) : 100;
-  const riskDetectionRate = totalRisk > 0 ? Math.round((riskCorrect / totalRisk) * 100) : 100;
+  const riskDetectionRate = totalHighRisk > 0 ? Math.round((highRiskCorrect / totalHighRisk) * 100) : 100;
 
   console.log('\n============================================================');
-  console.log(' EVALUATION SUMMARY (Hackathon Regression Evaluation)');
+  console.log(' FINAL EVALUATION SUMMARY');
   console.log('============================================================');
-  console.log(`Total Cases:        ${testCases.length}`);
-  console.log(`Passed:             ${passed} / ${testCases.length} (${Math.round((passed / testCases.length) * 100)}%)`);
-  console.log(`Failed:             ${failed}`);
-  console.log(`False Positives:    ${falsePositives}`);
-  console.log(`False Negatives:    ${falseNegatives}`);
-  console.log(`Safe Accuracy:      ${safeAccuracy}%`);
-  console.log(`Risk Detection Rate:${riskDetectionRate}%`);
+  console.log(`Total Golden Cases:  ${testCases.length}`);
+  console.log(`Passed:              ${passed} / ${testCases.length} (${Math.round((passed / testCases.length) * 100)}%)`);
+  console.log(`Failed:              ${failed}`);
+  console.log(`False Positives:     ${falsePositives}`);
+  console.log(`False Negatives:     ${falseNegatives}`);
+  console.log(`FALSE ALLOW COUNT:   ${falseAllowCount} (Target: 0)`);
+  console.log(`Safe Accuracy:       ${safeAccuracy}%`);
+  console.log(`Risk Detection Rate: ${riskDetectionRate}%`);
   console.log('============================================================\n');
 
-  if (failed > 0) {
+  if (failed > 0 || falseAllowCount > 0) {
     process.exit(1);
   }
 }

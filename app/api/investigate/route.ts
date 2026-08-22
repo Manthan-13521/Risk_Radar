@@ -5,12 +5,9 @@ import { callLLM } from '@/lib/openrouter';
 import { getDb } from '@/lib/mongodb';
 import { findSimilarDNA, normalizeTag } from '@/lib/dna';
 import {
-  calculateFinalRisk,
-  calculateFinalConfidence,
-  classifyRisk,
-  determineAction,
   buildFallbackOutput,
 } from '@/lib/policy-engine';
+import { evaluateSecurityDecision } from '@/lib/security-decision';
 import { extractFileMetadataAndText, FileHeuristic } from '@/lib/file-analysis';
 
 // Lightweight in-memory rate limiter
@@ -170,22 +167,28 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Calibrate Risk, Confidence, and Classification via Policy Engine
-    const finalRisk = calculateFinalRisk(baseHeuristicScore, llmOutput.risk_score);
-    const { confidence: finalConfidence, hasDisagreement } = calculateFinalConfidence(
-      llmOutput.confidence_score,
-      baseHeuristicScore,
-      llmOutput.risk_score,
-      llmOutput.attacker_intent,
-      combinedSignals.length
-    );
+    // 3. Centralized Security Decision Authority (Authoritative Policy Layer)
+    const decision = evaluateSecurityDecision({
+      heuristicScore: baseHeuristicScore,
+      heuristicSignals: combinedSignals,
+      llmOutput,
+      failureCode: failureReasonCode,
+      analysisStatus,
+      inputType: type,
+    });
 
-    const finalClassification = classifyRisk(finalRisk, finalConfidence);
-    const finalAction = determineAction(finalRisk, finalConfidence);
+    const finalRisk = decision.finalRisk;
+    const finalConfidence = decision.finalConfidence;
+    const finalClassification = decision.finalClassification;
+    const finalAction = decision.recommendedAction;
+    const attackerIntent = decision.attackerIntent;
+    const finalExplanation = decision.explanation;
+    const finalEvidence = decision.evidence;
+    const hasDisagreement = decision.hasDisagreement;
 
     // 4. Threat DNA Tag Extraction (Filtered & Normalized)
     const rawDnaTags = [
-      ...llmOutput.dna_tags,
+      ...(llmOutput?.dna_tags || []),
       ...combinedSignals.map((s) => s.type),
     ];
     const normalizedDnaTags = Array.from(
@@ -221,13 +224,13 @@ export async function POST(req: Request) {
       confidenceScore: finalConfidence,
       heuristicScore: baseHeuristicScore,
       classification: finalClassification,
-      attackerIntent: llmOutput.attacker_intent,
-      explanation: llmOutput.explanation,
+      attackerIntent: attackerIntent,
+      explanation: finalExplanation,
       analysisStatus,
       analysisSource,
       failureCode: failureReasonCode,
       hasDisagreement,
-      evidence: llmOutput.evidence,
+      evidence: finalEvidence,
       dnaTags: normalizedDnaTags,
       dnaOverlap,
       recommendedAction: finalAction,

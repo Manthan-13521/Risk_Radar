@@ -11,11 +11,27 @@ const STEPS = [
   '05  POLICY DECISION',
 ];
 
+export const DEMO_SCENARIOS = [
+  { label: 'Bank Phishing', type: 'message' as const, content: 'https://paypa1-security.example.invalid/login', cls: 'critical' },
+  { label: 'Delivery Scam', type: 'message' as const, content: 'Your package could not be delivered. Pay a ₹49 redelivery fee immediately using the link: https://deliv-pay.top/track', cls: 'dangerous' },
+  { label: 'Account Suspension', type: 'message' as const, content: 'FINAL WARNING: Verify your HDFC banking account today or access will be disabled. Complete identity verification immediately.', cls: 'dangerous' },
+  { label: 'Safe Website', type: 'message' as const, content: 'https://www.google.com/search?q=cybersecurity+threat+intelligence', cls: 'safe' },
+];
+
+function clsStyle(cls: string): { bg: string; color: string } {
+  if (cls === 'critical') return { bg: '#76000D', color: '#fff' };
+  if (cls === 'dangerous') return { bg: '#990011', color: '#fff' };
+  if (cls === 'suspicious') return { bg: '#B86A00', color: '#fff' };
+  return { bg: '#176B52', color: '#fff' };
+}
+
 export default function InvestigateForm({
   compact = false,
+  showDemos = true,
   onScanStateChange,
 }: {
   compact?: boolean;
+  showDemos?: boolean;
   onScanStateChange?: (stage: number) => void;
 }) {
   const router = useRouter();
@@ -27,13 +43,16 @@ export default function InvestigateForm({
   const [inputType, setInputType] = useState<'message' | 'file'>('message');
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     const urlContent = searchParams?.get('content');
     const urlType = searchParams?.get('type');
-    if (urlContent) setContent(urlContent);
-    if (urlType === 'file') setInputType('file');
-    else if (urlType) setInputType('message');
+    if (urlContent) {
+      setContent(decodeURIComponent(urlContent));
+      if (urlType === 'file') setInputType('file');
+      else setInputType('message');
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -48,8 +67,21 @@ export default function InvestigateForm({
     return () => clearInterval(interval);
   }, [loading, onScanStateChange]);
 
+  const loadDemo = (demoContent: string, demoType: 'message' | 'file' = 'message') => {
+    setInputType(demoType);
+    setContent(demoContent);
+    setError(null);
+    if (demoType === 'message' && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (loading) return;
+    if (inputType === 'message' && !content.trim()) return;
+    if (inputType === 'file' && !fileName) return;
+
     setLoading(true);
     setError(null);
     setLoadingStep(1);
@@ -86,9 +118,9 @@ export default function InvestigateForm({
           />
           <input type="hidden" name="type" value="message" />
           <button
-            type="submit" disabled={loading || !content.trim()}
-            className="px-6 py-3.5 rounded-xl text-sm font-extrabold text-white shrink-0 transition hover:opacity-90"
-            style={{ background: loading || !content.trim() ? '#C4B5B0' : '#990011', color: loading || !content.trim() ? '#554B49' : '#fff' }}
+            type="submit" disabled={disabled}
+            className="px-6 py-3.5 rounded-xl text-sm font-extrabold text-white shrink-0 transition hover:opacity-90 shadow-sm"
+            style={{ background: disabled ? '#C4B5B0' : '#990011', color: disabled ? '#554B49' : '#fff' }}
           >
             {loading ? 'Scanning...' : 'Investigate →'}
           </button>
@@ -110,40 +142,75 @@ export default function InvestigateForm({
         </div>
       )}
 
-      {/* Type selector */}
-      <div className="flex gap-1.5 p-1 rounded-xl border w-fit" style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}>
-        <button
-          type="button"
-          onClick={() => { setInputType('message'); setFileName(null); }}
-          className="px-4 py-2 rounded-lg text-xs font-extrabold transition"
-          style={inputType === 'message' ? { background: '#990011', color: '#fff' } : { color: '#554B49' }}
-        >
-          URL / MESSAGE
-        </button>
-        <button
-          type="button"
-          onClick={() => { setInputType('file'); fileInputRef.current?.click(); }}
-          className="px-4 py-2 rounded-lg text-xs font-extrabold transition"
-          style={inputType === 'file' ? { background: '#990011', color: '#fff' } : { color: '#554B49' }}
-        >
-          FILE
-        </button>
+      {/* Top row: Type selector & In-place Demo buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex gap-1.5 p-1 rounded-xl border w-fit" style={{ background: '#ECE6E2', borderColor: '#C4B5B0' }}>
+          <button
+            type="button"
+            onClick={() => { setInputType('message'); setFileName(null); }}
+            className="px-4 py-2 rounded-lg text-xs font-extrabold transition"
+            style={inputType === 'message' ? { background: '#990011', color: '#fff' } : { color: '#554B49' }}
+          >
+            URL / MESSAGE
+          </button>
+          <button
+            type="button"
+            onClick={() => { setInputType('file'); fileInputRef.current?.click(); }}
+            className="px-4 py-2 rounded-lg text-xs font-extrabold transition"
+            style={inputType === 'file' ? { background: '#990011', color: '#fff' } : { color: '#554B49' }}
+          >
+            FILE
+          </button>
+        </div>
+
+        {showDemos && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest mr-1" style={{ color: '#554B49' }}>
+              Demo:
+            </span>
+            {DEMO_SCENARIOS.map(d => {
+              const { bg, color: pillColor } = clsStyle(d.cls);
+              const isSelected = content === d.content;
+              return (
+                <button
+                  key={d.label}
+                  type="button"
+                  onClick={() => loadDemo(d.content, d.type)}
+                  className="px-3 py-1 rounded-full text-[10px] font-extrabold transition hover:opacity-85 shadow-xs"
+                  style={{
+                    background: bg,
+                    color: pillColor,
+                    outline: isSelected ? '2px solid #111111' : 'none',
+                    transform: isSelected ? 'scale(1.04)' : 'scale(1)',
+                  }}
+                  title={`Load "${d.label}" sample into the form`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <input type="hidden" name="type" value={inputType} />
 
       {inputType === 'message' ? (
         <textarea
-          name="content" value={content} onChange={e => setContent(e.target.value)}
-          disabled={loading} rows={5}
+          ref={textareaRef}
+          name="content"
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          disabled={loading}
+          rows={5}
           placeholder="Paste suspicious URL, email header, SMS text, or message here..."
-          className="w-full p-4 rounded-xl text-sm font-mono leading-relaxed resize-y"
+          className="w-full p-4 rounded-xl text-sm font-mono leading-relaxed resize-y shadow-xs"
           style={{ background: '#ECE6E2', border: '1.5px solid #C4B5B0', color: '#111111', outline: 'none' }}
         />
       ) : (
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition hover:bg-white/40"
+          className="p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition hover:bg-white/40 shadow-xs"
           style={{ borderColor: '#C4B5B0', background: '#ECE6E2' }}
         >
           <input
@@ -160,8 +227,8 @@ export default function InvestigateForm({
 
       {/* Animated pipeline during scan */}
       {loading && (
-        <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgba(153,0,17,0.04)', border: '1px solid rgba(153,0,17,0.15)' }}>
-          <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#990011' }}>INVESTIGATION IN PROGRESS</div>
+        <div className="rounded-xl p-4 space-y-3 shadow-xs" style={{ background: 'rgba(153,0,17,0.06)', border: '1px solid rgba(153,0,17,0.2)' }}>
+          <div className="text-xs font-extrabold uppercase tracking-widest" style={{ color: '#990011' }}>INVESTIGATION IN PROGRESS</div>
           <div className="space-y-1.5">
             {STEPS.map((step, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -182,8 +249,11 @@ export default function InvestigateForm({
 
       <button
         type="submit" disabled={disabled}
-        className="w-full py-4 rounded-xl text-sm font-extrabold tracking-widest uppercase transition hover:opacity-90 shadow-md"
-        style={{ background: disabled ? '#C4B5B0' : '#990011', color: disabled ? '#554B49' : '#fff' }}
+        className="w-full py-4 rounded-xl text-sm font-extrabold tracking-widest uppercase transition hover:opacity-90 shadow-md disabled:cursor-not-allowed"
+        style={{
+          background: disabled ? '#C4B5B0' : '#990011',
+          color: disabled ? '#554B49' : '#ffffff',
+        }}
       >
         {loading ? 'INVESTIGATION RUNNING...' : 'INVESTIGATE →'}
       </button>

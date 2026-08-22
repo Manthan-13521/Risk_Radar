@@ -7,13 +7,6 @@ import InvestigateForm from '@/components/InvestigateForm';
 import { IncidentListWithDrawer } from '@/components/IncidentListWithDrawer';
 import { IncidentItem } from '@/components/IncidentDrawer';
 
-const DEMO_CASES = [
-  { label: 'Bank Phishing', type: 'url', content: 'https://paypa1-security.example.invalid/login', cls: 'critical' },
-  { label: 'Delivery Scam', type: 'message', content: 'Your package could not be delivered. Pay a ₹49 redelivery fee immediately using the link: https://deliv-pay.top/track', cls: 'dangerous' },
-  { label: 'Account Suspension', type: 'message', content: 'FINAL WARNING: Verify your HDFC banking account today or access will be disabled.', cls: 'dangerous' },
-  { label: 'Safe Website', type: 'url', content: 'https://www.google.com/search?q=cybersecurity', cls: 'safe' },
-];
-
 function clsStyle(cls: string): { bg: string; color: string } {
   if (cls === 'critical') return { bg: '#76000D', color: '#fff' };
   if (cls === 'dangerous') return { bg: '#990011', color: '#fff' };
@@ -85,31 +78,13 @@ export default async function DashboardPage() {
       </div>
 
       {/* HERO SCANNER */}
-      <div className="rounded-2xl border p-6 md:p-8 space-y-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b" style={{ borderColor: '#C4B5B0' }}>
-          <div>
-            <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Primary Investigation Interface</div>
-            <h2 className="text-xl font-extrabold" style={{ color: '#111111' }}>INVESTIGATE AN ARTIFACT</h2>
-            <p className="text-sm mt-0.5" style={{ color: '#554B49' }}>Paste a URL, message, email or suspicious content.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest mr-1" style={{ color: '#554B49' }}>Demo:</span>
-            {DEMO_CASES.map(d => {
-              const { bg, color } = clsStyle(d.cls);
-              return (
-                <Link
-                  key={d.label}
-                  href={`/scanner?type=${d.type}&content=${encodeURIComponent(d.content)}`}
-                  className="px-3 py-1 rounded-full text-[10px] font-extrabold transition hover:opacity-85 shadow-sm"
-                  style={{ background: bg, color }}
-                >
-                  {d.label}
-                </Link>
-              );
-            })}
-          </div>
+      <div id="investigate-form-card" className="rounded-2xl border p-6 md:p-8 space-y-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+        <div className="pb-4 border-b" style={{ borderColor: '#C4B5B0' }}>
+          <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Primary Investigation Interface</div>
+          <h2 className="text-xl font-extrabold" style={{ color: '#111111' }}>INVESTIGATE AN ARTIFACT</h2>
+          <p className="text-sm mt-0.5" style={{ color: '#554B49' }}>Paste a URL, message, email or suspicious content for immediate multi-engine analysis.</p>
         </div>
-        <InvestigateForm />
+        <InvestigateForm showDemos={true} />
       </div>
 
       {/* SECURITY PULSE */}

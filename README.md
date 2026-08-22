@@ -1,24 +1,20 @@
 <div align="center">
 
-<!-- LOGO -->
-<svg width="72" height="72" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="24,2 44,12 44,36 24,46 4,36 4,12" fill="#990011" stroke="#111111" stroke-width="2.5" stroke-linejoin="round"/>
-  <polygon points="24,6 40,14 40,34 24,42 8,34 8,14" fill="#FCF6F5"/>
-  <circle cx="24" cy="24" r="14" stroke="#111111" stroke-width="2" fill="none"/>
-  <circle cx="24" cy="24" r="9.5" stroke="#111111" stroke-width="1.8" fill="none"/>
-  <circle cx="24" cy="24" r="5" stroke="#990011" stroke-width="1.5" fill="none"/>
-  <circle cx="24" cy="24" r="3" fill="#990011"/>
-  <path d="M24 24L38 10" stroke="#990011" stroke-width="2.5" stroke-linecap="round"/>
-  <circle cx="38" cy="10" r="1.8" fill="#76000D"/>
-</svg>
+<img src="logo.svg" width="100" height="100" alt="Risk_Radar Logo" />
 
 <h1>Risk_Radar</h1>
 <p><strong>Digital Immune System · Investigate Before You Interact.</strong></p>
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-risk--radar--4yow.onrender.com-990011?style=for-the-badge&logo=vercel&logoColor=white)](https://risk-radar-4yow.onrender.com)
-[![Next.js](https://img.shields.io/badge/Next.js%2014-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+<!-- Badges Row 1 — Live + Deployment -->
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-risk--radar--4yow.onrender.com-990011?style=for-the-badge&logo=googlechrome&logoColor=white)](https://risk-radar-4yow.onrender.com)
+[![Deployed on Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+
+<!-- Badges Row 2 — Tech Stack -->
+[![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongodb.com)
+[![OpenRouter](https://img.shields.io/badge/AI-OpenRouter-7C3AED?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
 </div>
 
@@ -83,16 +79,16 @@ An AI-powered cybersecurity investigation platform. Instead of passively scannin
 
 ---
 
-## Tech Stack
+## Tech Stack & Integrations
 
-```
-Frontend   →  Next.js 14 (App Router) · TypeScript · Tailwind CSS
-Backend    →  Next.js Route Handlers
-Database   →  MongoDB Atlas
-AI         →  OpenRouter (Mistral / Llama)
-Speech     →  Web Speech API (browser-native, no cost)
-Deployment →  Render
-```
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | ![Next.js](https://img.shields.io/badge/Next.js-000?logo=nextdotjs&logoColor=white&style=flat-square) Next.js 14 + TypeScript | App framework & routing |
+| **Styling** | ![Tailwind](https://img.shields.io/badge/Tailwind-06B6D4?logo=tailwindcss&logoColor=white&style=flat-square) Tailwind CSS | UI design system |
+| **Database** | ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white&style=flat-square) MongoDB Atlas | Scan history & incidents |
+| **AI** | ![OpenRouter](https://img.shields.io/badge/OpenRouter-7C3AED?logo=openai&logoColor=white&style=flat-square) OpenRouter | Intent analysis & reasoning |
+| **Speech** | Web Speech API | Browser-native voice verdict |
+| **Deployment** | ![Render](https://img.shields.io/badge/Render-46E3B7?logo=render&logoColor=white&style=flat-square) Render | Cloud hosting |
 
 ---
 
@@ -117,7 +113,7 @@ Heuristic Signals      →  domain structure, urgency language, brand mismatch
     ↓
 Threat DNA             →  Jaccard similarity against historical attack fingerprints
     ↓
-AI Reasoning           →  Intent analysis, context interpretation
+AI Reasoning           →  Intent analysis via OpenRouter LLM
     ↓
 Policy Engine          →  Deterministic final guard (overrides AI if needed)
     ↓
@@ -152,6 +148,8 @@ NEXT_PUBLIC_APP_URL=    # Your app base URL
 
 **Built for hackathon. Investigate before you interact.**
 
-[![GitHub](https://img.shields.io/badge/GitHub-Manthan--13521-181717?style=flat-square&logo=github)](https://github.com/Manthan-13521/Risk_Radar)
+[![GitHub](https://img.shields.io/badge/GitHub-Manthan--13521%2FRisk__Radar-181717?style=flat-square&logo=github)](https://github.com/Manthan-13521/Risk_Radar)
+&nbsp;·&nbsp;
+[![Live](https://img.shields.io/badge/Live-risk--radar--4yow.onrender.com-990011?style=flat-square)](https://risk-radar-4yow.onrender.com)
 
 </div>

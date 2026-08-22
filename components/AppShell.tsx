@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CommandPalette } from '@/components/CommandPalette';
+import { RiskRadarLogo } from '@/components/RiskRadarLogo';
 
 interface NavItem { label: string; href: string; icon: string; isPrimary?: boolean; }
 interface NavSection { title: string; items: NavItem[]; }
@@ -162,7 +163,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         <div className="h-14 flex items-center justify-between px-5 border-b" style={{ borderColor: '#D5C8C5' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-extrabold text-white text-sm" style={{ background: '#990011' }}>R</div>
+            <RiskRadarLogo size={30} />
             <div>
               <div className="font-extrabold text-sm tracking-tight" style={{ color: '#111111' }}>Risk_Radar</div>
               <div className="text-[9px] uppercase tracking-widest" style={{ color: '#6F6664' }}>Digital Immune System</div>
@@ -191,10 +192,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
       >
         <div className="h-14 flex items-center gap-3 px-5 border-b shrink-0" style={{ borderColor: '#D5C8C5' }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-extrabold text-white text-sm shrink-0" style={{ background: '#990011' }}>R</div>
+          <RiskRadarLogo size={30} className="shrink-0" />
           <div className="min-w-0">
-            <div className="font-extrabold text-sm tracking-tight" style={{ color: '#111111' }}>Risk_Radar</div>
-            <div className="text-[9px] uppercase tracking-widest" style={{ color: '#6F6664' }}>Digital Immune System</div>
+            <div className="font-extrabold text-sm tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
+            <div className="text-[9px] uppercase tracking-widest truncate" style={{ color: '#6F6664' }}>Digital Immune System</div>
           </div>
         </div>
 

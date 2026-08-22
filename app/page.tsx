@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { getDashboardStats } from '@/lib/dashboard';
 import { getIncidents } from '@/lib/incident-service';
 import InvestigateForm from '@/components/InvestigateForm';
+import { IncidentListWithDrawer } from '@/components/IncidentListWithDrawer';
+import { IncidentItem } from '@/components/IncidentDrawer';
 
 const DEMO_CASES = [
   { label: 'Bank Phishing', type: 'url', content: 'https://paypa1-security.example.invalid/login', cls: 'critical' },
@@ -24,12 +26,29 @@ function formatIntent(s: string) {
 }
 
 export default async function DashboardPage() {
-  const [stats, incidents] = await Promise.all([getDashboardStats(), getIncidents(6)]);
+  const [stats, rawIncidents] = await Promise.all([getDashboardStats(), getIncidents(6)]);
   const total = stats.totalScans || 0;
   const threats = stats.threatsDetected || 0;
   const safe = stats.safeCount || 0;
-  const activeIncidents = incidents.filter(i => i.status !== 'resolved').length;
+  const activeIncidents = rawIncidents.filter(i => i.status !== 'resolved').length;
   const recent = (stats.recentScans || []).slice(0, 5);
+
+  const serializedIncidents: IncidentItem[] = rawIncidents.slice(0, 4).map(inc => ({
+    _id: inc._id ? String(inc._id) : undefined,
+    incidentId: inc.incidentId,
+    severity: inc.severity,
+    status: inc.status,
+    riskScore: Number(inc.riskScore),
+    confidenceScore: Number(inc.confidenceScore),
+    attackerIntent: String(inc.attackerIntent || 'unknown'),
+    summary: String(inc.summary || ''),
+    evidence: (inc.evidence as Array<{ title?: string; description?: string; severity?: string }>) || [],
+    dnaTags: (inc.dnaTags as string[]) || [],
+    recommendedAction: String(inc.recommendedAction || ''),
+    actionTaken: inc.actionTaken ? String(inc.actionTaken) : undefined,
+    scanId: inc.scanId ? String(inc.scanId) : undefined,
+    createdAt: inc.createdAt,
+  }));
 
   return (
     <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-10" style={{ background: '#FCF6F5' }}>
@@ -111,6 +130,29 @@ export default async function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* ACTIVE INCIDENT REPORTS (TOP 3 LINES + SIDE POPUP UNIT) */}
+      {serializedIncidents.length > 0 && (
+        <div className="rounded-2xl border p-6 md:p-8 space-y-4" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: '#D5C8C5' }}>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#990011' }}>
+                Executive Incident Reports
+              </div>
+              <h3 className="text-lg font-extrabold" style={{ color: '#111111' }}>
+                ACTIVE SECURITY INCIDENTS (TOP 3-LINE SUMMARY)
+              </h3>
+              <p className="text-xs mt-0.5" style={{ color: '#6F6664' }}>
+                Click any report card to pop up the side drawer with the full threat breakdown.
+              </p>
+            </div>
+            <Link href="/incidents" className="text-xs font-bold shrink-0" style={{ color: '#990011' }}>
+              All Incidents ({activeIncidents}) →
+            </Link>
+          </div>
+          <IncidentListWithDrawer incidents={serializedIncidents} compact={true} />
+        </div>
+      )}
 
       {/* RECENT + THREAT DNA */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

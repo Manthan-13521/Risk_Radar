@@ -2,7 +2,7 @@ export function MetricCard({
   label,
   value,
   subLabel,
-  color = 'text-white',
+  color = '#111111',
   icon,
 }: {
   label: string;
@@ -12,13 +12,16 @@ export function MetricCard({
   icon?: string;
 }) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col justify-between hover:border-zinc-700 transition">
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">{label}</div>
-        {icon && <span className="text-sm opacity-60">{icon}</span>}
+    <div
+      className="rounded-xl border p-5 flex flex-col justify-between"
+      style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[10px] uppercase font-bold tracking-widest" style={{ color: '#6F6664' }}>{label}</div>
+        {icon && <span className="text-sm opacity-70">{icon}</span>}
       </div>
-      <div className={`text-2xl font-bold font-mono my-1 ${color}`}>{value}</div>
-      {subLabel && <div className="text-xs text-zinc-500">{subLabel}</div>}
+      <div className="text-3xl font-extrabold font-mono" style={{ color }}>{value}</div>
+      {subLabel && <div className="text-xs mt-1" style={{ color: '#6F6664' }}>{subLabel}</div>}
     </div>
   );
 }

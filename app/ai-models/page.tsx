@@ -1,64 +1,62 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
-import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function AIModelsPage() {
   const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
   const hasKey = Boolean(process.env.OPENROUTER_API_KEY);
 
   return (
-    <div className="p-6 space-y-6 max-w-[1200px]">
-      <PageHeader
-        title="AI Model Center"
-        subtitle="Configuration, reasoning constraints, and schema enforcement for the AI reasoning layer."
-        badge={
-          <span className="text-xs bg-blue-950/80 border border-blue-800/60 text-blue-300 px-2.5 py-0.5 rounded font-mono">
-            {model}
-          </span>
-        }
-      />
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#FCF6F5' }}>
+      {/* Header */}
+      <div className="border-b pb-6" style={{ borderColor: '#D5C8C5' }}>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Reasoning Engine</div>
+        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>AI MODEL CENTER</h1>
+        <p className="text-sm mt-1" style={{ color: '#6F6664' }}>
+          Configuration, reasoning constraints, and schema enforcement for the AI reasoning layer.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Active Model Config Card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">
+        <div className="rounded-2xl border p-6 space-y-4" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#111111' }}>
             Active Reasoning Engine
-          </h2>
+          </div>
 
-          <div className="space-y-3 font-mono text-xs">
-            <div className="flex justify-between p-2.5 bg-zinc-950/60 border border-zinc-800 rounded">
-              <span className="text-zinc-500">Provider</span>
-              <span className="text-zinc-200">OpenRouter AI Gateway</span>
+          <div className="space-y-2.5 font-mono text-xs">
+            <div className="flex justify-between p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span style={{ color: '#6F6664' }}>Provider</span>
+              <span className="font-bold" style={{ color: '#111111' }}>OpenRouter AI Gateway</span>
             </div>
-            <div className="flex justify-between p-2.5 bg-zinc-950/60 border border-zinc-800 rounded">
-              <span className="text-zinc-500">Model ID</span>
-              <span className="text-blue-300 truncate max-w-xs">{model}</span>
+            <div className="flex justify-between p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span style={{ color: '#6F6664' }}>Model ID</span>
+              <span className="truncate max-w-xs font-bold" style={{ color: '#990011' }}>{model}</span>
             </div>
-            <div className="flex justify-between p-2.5 bg-zinc-950/60 border border-zinc-800 rounded">
-              <span className="text-zinc-500">API Key Status</span>
-              <span className={hasKey ? 'text-emerald-400' : 'text-amber-400'}>
+            <div className="flex justify-between p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span style={{ color: '#6F6664' }}>API Key Status</span>
+              <span className="font-bold" style={{ color: hasKey ? '#176B52' : '#B86A00' }}>
                 {hasKey ? 'CONFIGURED ✓' : 'NOT SET (FALLBACK ACTIVE)'}
               </span>
             </div>
-            <div className="flex justify-between p-2.5 bg-zinc-950/60 border border-zinc-800 rounded">
-              <span className="text-zinc-500">Structured Schema</span>
-              <span className="text-emerald-400">Strict Zod (LLMOutputSchema)</span>
+            <div className="flex justify-between p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span style={{ color: '#6F6664' }}>Structured Schema</span>
+              <span className="font-bold" style={{ color: '#176B52' }}>Strict Zod (LLMOutputSchema)</span>
             </div>
-            <div className="flex justify-between p-2.5 bg-zinc-950/60 border border-zinc-800 rounded">
-              <span className="text-zinc-500">Max Tokens</span>
-              <span className="text-zinc-200">1500 tokens</span>
+            <div className="flex justify-between p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span style={{ color: '#6F6664' }}>Max Tokens</span>
+              <span className="font-bold" style={{ color: '#111111' }}>1500 tokens</span>
             </div>
           </div>
         </div>
 
         {/* Evaluation & Self-Test Card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 flex flex-col justify-between space-y-4">
+        <div className="rounded-2xl border p-6 flex flex-col justify-between space-y-4" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-300 mb-2">
+            <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#111111' }}>
               Model Diagnostic Evaluation
-            </h2>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: '#6F6664' }}>
               Verify end-to-end model inference, JSON formatting accuracy, and policy override mechanics directly against the golden evaluation set.
             </p>
           </div>
@@ -66,13 +64,15 @@ export default async function AIModelsPage() {
           <div className="space-y-2">
             <Link
               href="/evaluation"
-              className="w-full block text-center py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold rounded-lg transition"
+              className="w-full block text-center py-3 px-4 rounded-xl text-xs font-bold border transition hover:bg-white/40"
+              style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
             >
               Open Evaluation Lab →
             </Link>
             <Link
-              href="/investigate?type=url&content=https%3A%2F%2Fwww.google.com%2F"
-              className="w-full block text-center py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition"
+              href="/scanner?type=url&content=https%3A%2F%2Fwww.google.com%2F"
+              className="w-full block text-center py-3 px-4 rounded-xl text-xs font-bold text-white transition hover:opacity-90"
+              style={{ background: '#990011' }}
             >
               Run Safe Synthetic Test Case
             </Link>

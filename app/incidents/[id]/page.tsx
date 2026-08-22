@@ -2,8 +2,6 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { getIncidentById } from '@/lib/incident-service';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { IncidentActions } from '@/components/IncidentActions';
 
 export default async function IncidentDetailPage({ params }: { params: { id: string } }) {
@@ -11,90 +9,108 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
 
   if (!incident) {
     return (
-      <div className="p-12 text-center text-zinc-400">
-        <h2 className="text-lg font-bold text-white mb-2">Incident Not Found</h2>
-        <p className="text-xs text-zinc-500 mb-4">The requested incident ID does not exist in the database.</p>
-        <Link href="/incidents" className="text-xs text-blue-400 hover:underline">
+      <div className="p-12 text-center" style={{ color: '#111111' }}>
+        <h2 className="text-xl font-extrabold mb-2">INCIDENT NOT FOUND</h2>
+        <p className="text-sm mb-4" style={{ color: '#6F6664' }}>The requested incident ID does not exist in the database.</p>
+        <Link href="/incidents" className="text-xs font-bold" style={{ color: '#990011' }}>
           ← Back to Incident Response
         </Link>
       </div>
     );
   }
 
-  const formattedIntent = incident.attackerIntent.replace(/_/g, ' ');
+  const formattedIntent = incident.attackerIntent.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const sev = incident.severity;
+  const sevColor = sev === 'critical' ? '#76000D' : sev === 'high' ? '#990011' : sev === 'medium' ? '#B86A00' : '#6F6664';
 
   return (
-    <div className="p-6 space-y-6 max-w-[1200px]">
-      <PageHeader
-        title={`Incident: ${incident.incidentId}`}
-        subtitle={`Flagged on ${new Date(incident.createdAt).toLocaleString()}`}
-        badge={<StatusBadge classification={incident.severity} />}
-        actions={
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#FCF6F5' }}>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: '#D5C8C5' }}>
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Security Incident</div>
+          <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>INCIDENT: {incident.incidentId}</h1>
+          <p className="text-xs mt-1 font-mono" style={{ color: '#6F6664' }}>
+            Flagged on {new Date(incident.createdAt).toLocaleString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span
+            className="px-3 py-1 rounded text-xs font-bold uppercase"
+            style={{ background: `rgba(153,0,17,0.08)`, color: sevColor, border: `1px solid ${sevColor}` }}
+          >
+            {incident.severity}
+          </span>
           <Link
             href="/incidents"
-            className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded transition"
+            className="px-4 py-2 rounded-xl text-xs font-bold border transition hover:bg-white/40"
+            style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#111111' }}
           >
             ← Back to List
           </Link>
-        }
-      />
+        </div>
+      </div>
 
       {/* Triage Action Ribbon */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div
+        className="rounded-2xl border p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+        style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}
+      >
         <div>
-          <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Incident Lifecycle</div>
-          <div className="text-sm font-semibold text-zinc-200 mt-0.5">
-            Current Status: <span className="uppercase text-blue-400 font-mono">{incident.status}</span>
+          <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>Incident Lifecycle</div>
+          <div className="text-sm font-bold mt-0.5" style={{ color: '#111111' }}>
+            Status: <span className="uppercase font-mono" style={{ color: '#990011' }}>{incident.status}</span>
           </div>
           {incident.actionTaken && (
-            <p className="text-xs text-zinc-400 mt-1">Latest action: {incident.actionTaken}</p>
+            <p className="text-xs mt-1" style={{ color: '#6F6664' }}>Latest action: {incident.actionTaken}</p>
           )}
         </div>
         <IncidentActions incidentId={params.id} currentStatus={incident.status} />
       </div>
 
-      {/* Main Grid: Details & Metrics */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Risk & Confidence */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-6">
+        {/* Left Column */}
+        <div className="rounded-2xl border p-6 space-y-6" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
           <div>
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Risk Score</div>
-            <div className="text-4xl font-bold font-mono text-red-400">
-              {incident.riskScore} <span className="text-sm text-zinc-600">/100</span>
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#6F6664' }}>Risk Score</div>
+            <div className="text-4xl font-extrabold font-mono" style={{ color: '#990011' }}>
+              {incident.riskScore} <span className="text-xs" style={{ color: '#6F6664' }}>/100</span>
             </div>
-            <div className="w-full bg-zinc-800 rounded-full h-2 mt-2">
+            <div className="w-full rounded-full h-2 mt-2 overflow-hidden" style={{ background: '#D5C8C5' }}>
               <div
-                className="h-2 rounded-full bg-red-500"
-                style={{ width: `${incident.riskScore}%` }}
+                className="h-2 rounded-full"
+                style={{ width: `${incident.riskScore}%`, background: '#990011' }}
               />
             </div>
           </div>
 
           <div>
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">AI Confidence</div>
-            <div className="text-2xl font-bold font-mono text-blue-300">
-              {incident.confidenceScore} <span className="text-sm text-zinc-600">/100</span>
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#6F6664' }}>AI Confidence</div>
+            <div className="text-3xl font-extrabold font-mono" style={{ color: '#111111' }}>
+              {incident.confidenceScore}%
             </div>
-            <div className="w-full bg-zinc-800 rounded-full h-1.5 mt-2">
+            <div className="w-full rounded-full h-1.5 mt-2 overflow-hidden" style={{ background: '#D5C8C5' }}>
               <div
-                className="h-1.5 rounded-full bg-blue-500"
-                style={{ width: `${incident.confidenceScore}%` }}
+                className="h-1.5 rounded-full"
+                style={{ width: `${incident.confidenceScore}%`, background: '#111111' }}
               />
             </div>
           </div>
 
           <div>
-            <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Recommended Action</div>
-            <div className="text-sm font-bold font-mono uppercase text-amber-300">
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#6F6664' }}>Recommended Action</div>
+            <div className="text-lg font-extrabold font-mono uppercase" style={{ color: '#990011' }}>
               {incident.recommendedAction}
             </div>
           </div>
 
           {incident.scanId && (
-            <div className="pt-2 border-t border-zinc-800">
+            <div className="pt-4 border-t" style={{ borderColor: '#D5C8C5' }}>
               <Link
                 href={`/investigate/${incident.scanId}`}
-                className="text-xs text-blue-400 hover:underline flex items-center gap-1"
+                className="text-xs font-bold flex items-center gap-1.5"
+                style={{ color: '#990011' }}
               >
                 <span>🔍</span> View Full Investigation Record →
               </Link>
@@ -102,35 +118,36 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
           )}
         </div>
 
-        {/* Right 2 Columns: Threat Details & Evidence */}
+        {/* Right 2 Columns */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <div className="rounded-2xl border p-6 space-y-4" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+            <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>
               Threat Intelligence Context
-            </h3>
-            <div>
-              <span className="text-xs text-zinc-500 block">Attacker Intent</span>
-              <span className="text-base font-bold capitalize text-zinc-200">{formattedIntent}</span>
             </div>
             <div>
-              <span className="text-xs text-zinc-500 block">Incident Summary</span>
-              <p className="text-sm text-zinc-300 mt-1">{incident.summary}</p>
+              <span className="text-[10px] uppercase font-bold" style={{ color: '#6F6664' }}>Attacker Intent</span>
+              <div className="text-xl font-extrabold uppercase mt-0.5" style={{ color: '#111111' }}>{formattedIntent}</div>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold" style={{ color: '#6F6664' }}>Incident Summary</span>
+              <p className="text-sm mt-1 leading-relaxed" style={{ color: '#111111' }}>{incident.summary}</p>
             </div>
           </div>
 
           {/* Behavioral DNA Tags */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">
+          <div className="rounded-2xl border p-6" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#6F6664' }}>
               Behavioral DNA Signatures
-            </h3>
+            </div>
             {incident.dnaTags.length === 0 ? (
-              <p className="text-xs text-zinc-600">No DNA tags recorded.</p>
+              <p className="text-xs" style={{ color: '#6F6664' }}>No DNA tags recorded.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {incident.dnaTags.map((tag, idx) => (
                   <span
                     key={idx}
-                    className="px-2.5 py-1 bg-zinc-800 text-blue-300 border border-zinc-700 text-xs font-mono rounded"
+                    className="px-3 py-1.5 rounded-lg border text-xs font-mono"
+                    style={{ background: '#E7DEDC', borderColor: '#D5C8C5', color: '#111111' }}
                   >
                     {tag}
                   </span>
@@ -140,25 +157,42 @@ export default async function IncidentDetailPage({ params }: { params: { id: str
           </div>
 
           {/* Evidence List */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <div className="rounded-2xl border p-6 space-y-3" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+            <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>
               Corroborating Evidence
-            </h3>
+            </div>
             {incident.evidence.length === 0 ? (
-              <p className="text-xs text-zinc-600">No specific evidence records attached.</p>
+              <p className="text-xs" style={{ color: '#6F6664' }}>No specific evidence records attached.</p>
             ) : (
               <div className="space-y-2">
-                {incident.evidence.map((ev, i) => (
-                  <div key={i} className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-zinc-200">{String(ev.title || 'Evidence Signal')}</span>
-                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-zinc-800 text-zinc-400 rounded">
-                        {String(ev.severity || 'info')}
-                      </span>
+                {incident.evidence.map((ev: unknown, i: number) => {
+                  const evRecord = ev as Record<string, string>;
+                  const evSev = evRecord.severity || 'info';
+                  const isHigh = evSev === 'critical' || evSev === 'high';
+                  return (
+                    <div
+                      key={i}
+                      className="p-3.5 rounded-xl border text-xs space-y-1"
+                      style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold" style={{ color: '#111111' }}>{evRecord.title || 'Evidence Signal'}</span>
+                        <span
+                          className="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-bold"
+                          style={{
+                            background: isHigh ? 'rgba(153,0,17,0.1)' : 'rgba(111,102,100,0.1)',
+                            color: isHigh ? '#990011' : '#6F6664',
+                          }}
+                        >
+                          {evSev}
+                        </span>
+                      </div>
+                      {evRecord.description && (
+                        <p className="leading-relaxed" style={{ color: '#6F6664' }}>{evRecord.description}</p>
+                      )}
                     </div>
-                    {ev.description ? <p className="text-zinc-400">{String(ev.description)}</p> : null}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

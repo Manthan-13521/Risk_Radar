@@ -58,7 +58,8 @@ export function AddKnowledgeModal() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition shadow-md shadow-blue-900/20"
+        className="px-4 py-2 text-xs font-bold text-white rounded-xl transition hover:opacity-90"
+        style={{ background: '#990011' }}
       >
         + Add Knowledge Fact
       </button>
@@ -66,32 +67,43 @@ export function AddKnowledgeModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white">Add Security Knowledge Fact</h3>
-          <button onClick={() => setOpen(false)} className="text-zinc-500 hover:text-white text-xs">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(17,17,17,0.6)', backdropFilter: 'blur(6px)' }}
+    >
+      <div
+        className="rounded-2xl border p-6 max-w-md w-full space-y-4 shadow-2xl"
+        style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+      >
+        <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: '#D5C8C5' }}>
+          <h3 className="text-sm font-extrabold uppercase" style={{ color: '#111111' }}>Add Security Knowledge Fact</h3>
+          <button onClick={() => setOpen(false)} className="p-1 rounded text-xs" style={{ color: '#6F6664' }}>
             ✕
           </button>
         </div>
 
-        {error && <div className="p-2 bg-red-950/60 border border-red-800 text-red-300 text-xs rounded">{error}</div>}
+        {error && (
+          <div className="p-2.5 rounded-lg text-xs" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           <div>
-            <label className="block text-zinc-400 mb-1">Fact / Name</label>
+            <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Fact / Name</label>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white"
+              className="w-full rounded-xl p-2.5 border"
+              style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111', outline: 'none' }}
               placeholder="e.g. Internal Payroll Domain"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-zinc-400 mb-1">Fact Type</label>
+              <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Fact Type</label>
               <select
                 value={type}
                 onChange={(e) =>
@@ -105,7 +117,8 @@ export function AddKnowledgeModal() {
                       | 'false_positive'
                   )
                 }
-                className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white"
+                className="w-full rounded-xl p-2.5 border"
+                style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
               >
                 <option value="trusted_domain">Trusted Domain</option>
                 <option value="brand_identity">Brand Identity</option>
@@ -117,11 +130,12 @@ export function AddKnowledgeModal() {
             </div>
 
             <div>
-              <label className="block text-zinc-400 mb-1">Severity Baseline</label>
+              <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Severity Baseline</label>
               <select
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value as 'low' | 'medium' | 'high' | 'critical')}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white"
+                className="w-full rounded-xl p-2.5 border"
+                style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -132,24 +146,26 @@ export function AddKnowledgeModal() {
           </div>
 
           <div>
-            <label className="block text-zinc-400 mb-1">Target Value / Domain / Pattern</label>
+            <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Target Value / Domain / Pattern</label>
             <input
               required
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white font-mono"
+              className="w-full rounded-xl p-2.5 border font-mono"
+              style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#990011', outline: 'none' }}
               placeholder="e.g. payroll.internal-company.com"
             />
           </div>
 
           <div>
-            <label className="block text-zinc-400 mb-1">Description / Context</label>
+            <label className="block font-bold mb-1" style={{ color: '#6F6664' }}>Description / Context</label>
             <textarea
               required
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white"
+              className="w-full rounded-xl p-2.5 border resize-y"
+              style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111', outline: 'none' }}
               placeholder="Operational justification for this rule..."
             />
           </div>
@@ -158,14 +174,16 @@ export function AddKnowledgeModal() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded"
+              className="px-4 py-2 rounded-xl font-bold border"
+              style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#111111' }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold rounded"
+              className="px-4 py-2 rounded-xl text-white font-bold transition hover:opacity-90 disabled:opacity-50"
+              style={{ background: '#990011' }}
             >
               {loading ? 'Adding...' : 'Save Knowledge Fact'}
             </button>

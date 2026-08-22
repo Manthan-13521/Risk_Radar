@@ -9,8 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        rr: {
+          bg: '#FCF6F5',
+          surface: '#F0E8E6',
+          surface2: '#E7DEDC',
+          border: '#D5C8C5',
+          text: '#111111',
+          muted: '#6F6664',
+          red: '#990011',
+          'red-dark': '#76000D',
+          'red-hover': '#B30018',
+          safe: '#176B52',
+          warn: '#B86A00',
+        },
       },
     },
   },

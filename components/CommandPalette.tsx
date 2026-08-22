@@ -8,30 +8,29 @@ interface CommandItem {
   category: string;
   href: string;
   icon: string;
-  shortcut?: string;
 }
 
 const COMMANDS: CommandItem[] = [
-  { title: 'Executive Dashboard', category: 'Navigation', href: '/', icon: '⬡' },
-  { title: 'Investigation Center', category: 'Navigation', href: '/investigate', icon: '🔍' },
-  { title: 'Incident Response Center', category: 'Navigation', href: '/incidents', icon: '🚨' },
-  { title: 'Scan History', category: 'Navigation', href: '/history', icon: '📋' },
-  { title: 'Threat DNA Explorer', category: 'Navigation', href: '/threat-dna', icon: '🧬' },
-  { title: 'Threat Intelligence', category: 'Navigation', href: '/intelligence', icon: '🌐' },
-  { title: 'Security Policies', category: 'Governance', href: '/policies', icon: '🛡' },
-  { title: 'Knowledge Center', category: 'Governance', href: '/knowledge', icon: '📚' },
-  { title: 'Evaluation & Benchmark Lab', category: 'Governance', href: '/evaluation', icon: '🧪' },
-  { title: 'Immutable Audit Logs', category: 'Governance', href: '/audit-logs', icon: '📜' },
-  { title: 'AI System Health', category: 'AI System', href: '/ai-health', icon: '🤖' },
-  { title: 'AI Model Center', category: 'AI System', href: '/ai-models', icon: '⚙️' },
-  { title: 'Voice Assistant Briefings', category: 'AI System', href: '/voice', icon: '🔊' },
+  { title: 'Executive Dashboard', category: 'Navigation', href: '/dashboard', icon: '▣' },
+  { title: 'Artifact Scanner', category: 'Navigation', href: '/scanner', icon: '⊕' },
+  { title: 'Incident Response Center', category: 'Navigation', href: '/incidents', icon: '⚠' },
+  { title: 'Scan History', category: 'Navigation', href: '/history', icon: '◷' },
+  { title: 'Threat DNA Explorer', category: 'Navigation', href: '/threat-dna', icon: '◈' },
+  { title: 'Threat Intelligence', category: 'Navigation', href: '/intelligence', icon: '◉' },
+  { title: 'Security Policies', category: 'Governance', href: '/policies', icon: '◧' },
+  { title: 'Knowledge Center', category: 'Governance', href: '/knowledge', icon: '◫' },
+  { title: 'Evaluation & Benchmark Lab', category: 'Governance', href: '/evaluation', icon: '◇' },
+  { title: 'Immutable Audit Logs', category: 'Governance', href: '/audit', icon: '◻' },
+  { title: 'AI System Health', category: 'AI System', href: '/ai-health', icon: '◎' },
+  { title: 'AI Model Center', category: 'AI System', href: '/ai-models', icon: '◈' },
+  { title: 'Voice Assistant', category: 'AI System', href: '/voice', icon: '◁' },
   { title: 'WhatsApp Security Gateway', category: 'Integrations', href: '/integrations/whatsapp', icon: '💬' },
   { title: 'System Infrastructure Health', category: 'System', href: '/system', icon: '❤️' },
   { title: 'Platform Settings', category: 'System', href: '/settings', icon: '⚙' },
   // Quick Scenarios
-  { title: 'Run Demo: PayPal Phishing Attack', category: 'Quick Demo', href: '/investigate?type=url&content=https%3A%2F%2Fpaypa1-security.example.invalid%2Flogin', icon: '⚡' },
-  { title: 'Run Demo: Package Delivery Scam', category: 'Quick Demo', href: '/investigate?type=message&content=Your%20package%20could%20not%20be%20delivered.%20Pay%20a%20%E2%82%B949%20redelivery%20fee%20immediately.', icon: '⚡' },
-  { title: 'Run Demo: Credential Theft Urgency', category: 'Quick Demo', href: '/investigate?type=message&content=FINAL%20WARNING%3A%20Verify%20your%20HDFC%20banking%20account%20today%20or%20access%20will%20be%20disabled.', icon: '⚡' },
+  { title: 'Run Demo: PayPal Phishing Attack', category: 'Quick Demo', href: '/scanner?type=url&content=https%3A%2F%2Fpaypa1-security.example.invalid%2Flogin', icon: '⚡' },
+  { title: 'Run Demo: Package Delivery Scam', category: 'Quick Demo', href: '/scanner?type=message&content=Your%20package%20could%20not%20be%20delivered.%20Pay%20a%20%E2%82%B949%20redelivery%20fee%20immediately%20using%20the%20link%3A%20https%3A%2F%2Fdeliv-pay.top%2Ftrack', icon: '⚡' },
+  { title: 'Run Demo: Credential Theft Urgency', category: 'Quick Demo', href: '/scanner?type=message&content=FINAL%20WARNING%3A%20Verify%20your%20HDFC%20banking%20account%20today%20or%20access%20will%20be%20disabled.', icon: '⚡' },
 ];
 
 export function CommandPalette({
@@ -70,15 +69,18 @@ export function CommandPalette({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start justify-center pt-20 p-4 animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 animate-in fade-in duration-150"
+      style={{ background: 'rgba(17,17,17,0.6)', backdropFilter: 'blur(6px)' }}
+    >
+      <div className="fixed inset-0" onClick={onClose} />
       <div
-        className="fixed inset-0"
-        onClick={onClose}
-      />
-      <div className="relative w-full max-w-xl bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[75vh]">
+        className="relative w-full max-w-xl rounded-2xl border shadow-2xl overflow-hidden z-10 flex flex-col max-h-[75vh]"
+        style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}
+      >
         {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-zinc-800 bg-zinc-950/60 gap-3">
-          <span className="text-zinc-400 text-lg">🔍</span>
+        <div className="flex items-center px-4 py-3.5 border-b gap-3" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <span style={{ color: '#6F6664' }}>⌕</span>
           <input
             autoFocus
             value={query}
@@ -102,9 +104,13 @@ export function CommandPalette({
               }
             }}
             placeholder="Search commands, pages, intelligence, demo scans..."
-            className="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none"
+            className="w-full bg-transparent text-sm focus:outline-none"
+            style={{ color: '#111111' }}
           />
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-zinc-400 bg-zinc-800 border border-zinc-700 rounded">
+          <kbd
+            className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono rounded border"
+            style={{ background: '#E7DEDC', borderColor: '#D5C8C5', color: '#6F6664' }}
+          >
             ESC
           </kbd>
         </div>
@@ -112,7 +118,7 @@ export function CommandPalette({
         {/* Results List */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filtered.length === 0 ? (
-            <div className="p-8 text-center text-xs text-zinc-500">
+            <div className="p-8 text-center text-xs" style={{ color: '#6F6664' }}>
               No matching commands or pages found.
             </div>
           ) : (
@@ -123,36 +129,39 @@ export function CommandPalette({
                   key={item.href + item.title}
                   onClick={() => handleSelect(item.href)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-left text-xs transition ${
-                    isSelected
-                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                      : 'text-zinc-300 hover:bg-zinc-800/60 border border-transparent'
-                  }`}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs transition"
+                  style={{
+                    background: isSelected ? '#990011' : 'transparent',
+                    color: isSelected ? '#ffffff' : '#111111',
+                  }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-sm">{item.icon}</span>
+                    <span className="text-sm font-mono">{item.icon}</span>
                     <div>
-                      <div className="font-medium text-white">{item.title}</div>
-                      <div className="text-[10px] text-zinc-500">{item.category}</div>
+                      <div className="font-bold" style={{ color: isSelected ? '#ffffff' : '#111111' }}>{item.title}</div>
+                      <div className="text-[10px]" style={{ color: isSelected ? 'rgba(255,255,255,0.7)' : '#6F6664' }}>{item.category}</div>
                     </div>
                   </div>
-                  <span className="text-[11px] text-zinc-500 font-mono">↵ Jump</span>
+                  <span className="text-[11px] font-mono" style={{ color: isSelected ? 'rgba(255,255,255,0.7)' : '#6F6664' }}>↵ Jump</span>
                 </button>
               );
             })
           )}
         </div>
 
-        {/* Command Palette Footer */}
-        <div className="px-4 py-2 bg-zinc-950 border-t border-zinc-800/80 flex items-center justify-between text-[10px] text-zinc-500 font-mono">
+        {/* Footer */}
+        <div
+          className="px-4 py-2 border-t flex items-center justify-between text-[10px] font-mono"
+          style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#6F6664' }}
+        >
           <div className="flex items-center gap-2">
             <span>↑↓ Navigate</span>
-            <span>•</span>
+            <span>·</span>
             <span>↵ Select</span>
-            <span>•</span>
+            <span>·</span>
             <span>ESC Close</span>
           </div>
-          <span>ShieldSense Command Center</span>
+          <span>Risk_Radar Command</span>
         </div>
       </div>
     </div>

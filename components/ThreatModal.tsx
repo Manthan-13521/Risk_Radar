@@ -14,135 +14,102 @@ interface ThreatModalProps {
 }
 
 export default function ThreatModal({
-  riskScore,
-  confidenceScore,
-  attackerIntent,
-  evidence,
-  recommendedAction,
-  scanId,
-  actionTaken,
+  riskScore, confidenceScore, attackerIntent, evidence, recommendedAction, scanId, actionTaken,
 }: ThreatModalProps) {
   const [isOpen, setIsOpen] = useState(true);
-
   if (!isOpen) return null;
 
-  const topEvidence = evidence.slice(0, 3);
-  const formattedIntent = attackerIntent
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (l) => l.toUpperCase());
+  const top = evidence.slice(0, 3);
+  const intent = attackerIntent.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="threat-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(17,17,17,0.6)', backdropFilter: 'blur(8px)' }}
+      role="dialog" aria-modal="true" aria-labelledby="threat-modal-title"
     >
-      <div className="bg-zinc-900 border-2 border-red-600/80 rounded-2xl max-w-lg w-full p-6 md:p-8 shadow-2xl shadow-red-950/60 space-y-6 text-white relative">
+      <div
+        className="max-w-lg w-full rounded-2xl border-2 p-6 md:p-8 space-y-5"
+        style={{ background: '#FCF6F5', borderColor: '#990011' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl animate-bounce">🚨</span>
-            <div>
-              <h2 id="threat-modal-title" className="text-2xl font-bold text-red-400 tracking-tight">
-                THREAT DETECTED
-              </h2>
-              <p className="text-xs text-zinc-400 uppercase tracking-widest mt-0.5">
-                High-Risk Security Finding
-              </p>
-            </div>
+        <div className="flex items-center justify-between pb-4 border-b" style={{ borderColor: '#D5C8C5' }}>
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#990011' }}>Risk_Radar Alert</div>
+            <h2 id="threat-modal-title" className="text-2xl font-extrabold" style={{ color: '#111111' }}>THREAT DETECTED</h2>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="text-zinc-500 hover:text-zinc-300 p-1.5 rounded-lg hover:bg-zinc-800 transition"
+            className="p-1.5 rounded-lg"
+            style={{ color: '#6F6664' }}
             aria-label="Dismiss alert"
           >
             ✕
           </button>
         </div>
 
-        {/* Scores & Intent Card */}
-        <div className="grid grid-cols-3 gap-3 bg-zinc-950/80 p-4 rounded-xl border border-zinc-800">
+        {/* Scores */}
+        <div className="grid grid-cols-3 gap-3 p-4 rounded-xl border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
           <div className="text-center">
-            <div className="text-xs text-zinc-500 font-semibold uppercase">Risk</div>
-            <div className="text-2xl font-extrabold text-red-400 mt-1">{riskScore} <span className="text-xs text-zinc-500">/100</span></div>
-          </div>
-          <div className="text-center border-x border-zinc-800">
-            <div className="text-xs text-zinc-500 font-semibold uppercase">Confidence</div>
-            <div className="text-2xl font-extrabold text-blue-400 mt-1">{confidenceScore}%</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-zinc-500 font-semibold uppercase">Likely Intent</div>
-            <div className="text-xs font-bold text-zinc-200 mt-2 truncate px-1" title={formattedIntent}>
-              {formattedIntent}
+            <div className="text-[10px] font-bold uppercase" style={{ color: '#6F6664' }}>Risk</div>
+            <div className="text-2xl font-extrabold font-mono" style={{ color: '#990011' }}>
+              {riskScore}<span className="text-xs" style={{ color: '#6F6664' }}>/100</span>
             </div>
+          </div>
+          <div className="text-center border-x" style={{ borderColor: '#D5C8C5' }}>
+            <div className="text-[10px] font-bold uppercase" style={{ color: '#6F6664' }}>Confidence</div>
+            <div className="text-2xl font-extrabold font-mono" style={{ color: '#111111' }}>{confidenceScore}%</div>
+          </div>
+          <div className="text-center">
+            <div className="text-[10px] font-bold uppercase" style={{ color: '#6F6664' }}>Intent</div>
+            <div className="text-xs font-bold mt-2 px-1 truncate" title={intent} style={{ color: '#111111' }}>{intent}</div>
           </div>
         </div>
 
-        {/* Top Warning Signs */}
-        {topEvidence.length > 0 && (
+        {/* Top evidence */}
+        {top.length > 0 && (
           <div className="space-y-2">
-            <div className="text-xs text-zinc-400 uppercase font-semibold tracking-wider">
-              Key Malicious Indicators
-            </div>
-            <ul className="space-y-1.5">
-              {topEvidence.map((e, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm text-zinc-300 bg-red-950/20 p-2 rounded border border-red-900/30">
-                  <span className="text-red-400 font-bold">•</span>
-                  <div>
-                    <span className="font-medium text-red-200">{e.title}:</span>{' '}
-                    <span className="text-zinc-400 text-xs">{e.description}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>Key Indicators</div>
+            {top.map((e, i) => (
+              <div
+                key={i}
+                className="flex gap-2 p-2.5 rounded-lg border"
+                style={{ background: 'rgba(153,0,17,0.04)', borderColor: 'rgba(153,0,17,0.15)' }}
+              >
+                <span className="font-bold text-sm" style={{ color: '#990011' }}>·</span>
+                <div>
+                  <span className="text-xs font-bold" style={{ color: '#990011' }}>{e.title}: </span>
+                  <span className="text-xs" style={{ color: '#6F6664' }}>{e.description}</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Recommended Action */}
-        <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 flex items-center justify-between">
-          <div>
-            <div className="text-xs text-zinc-500 uppercase font-semibold">Recommended Action</div>
-            <div className="text-lg font-bold text-red-400 capitalize mt-0.5 flex items-center gap-2">
-              🔒 {recommendedAction}
-            </div>
-          </div>
-          <div className="text-xs text-zinc-500 italic max-w-[180px] text-right">
-            Simulated policy response
-          </div>
-        </div>
-
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
             onClick={() => {
               setIsOpen(false);
-              const el = document.getElementById('evidence-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
+              document.getElementById('evidence-section')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="flex-1 px-4 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium transition text-center text-sm border border-zinc-700"
+            className="flex-1 px-4 py-3 rounded-xl text-xs font-bold border transition"
+            style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#111111' }}
           >
-            Review Full Evidence
+            Review Evidence
           </button>
-
           {actionTaken ? (
-            <div className="flex-1 px-4 py-3 rounded-lg bg-zinc-800 text-zinc-400 font-medium text-center text-sm border border-zinc-700 flex items-center justify-center gap-1.5">
+            <div className="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-center border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#176B52' }}>
               ✓ Simulated {actionTaken}
             </div>
           ) : (
-            <form
-              action={`/api/scans/${scanId}/action`}
-              method="POST"
-              className="flex-1"
-              onSubmit={() => setIsOpen(false)}
-            >
+            <form action={`/api/scans/${scanId}/action`} method="POST" className="flex-1" onSubmit={() => setIsOpen(false)}>
               <button
-                type="submit"
-                name="action"
-                value={recommendedAction}
-                className="w-full px-4 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold transition text-sm shadow-lg shadow-red-950"
+                type="submit" name="action" value={recommendedAction}
+                className="w-full px-4 py-3 rounded-xl text-xs font-extrabold text-white transition hover:opacity-90"
+                style={{ background: '#990011' }}
               >
-                Approve Simulated {recommendedAction}
+                APPROVE SIMULATED {recommendedAction.toUpperCase()}
               </button>
             </form>
           )}

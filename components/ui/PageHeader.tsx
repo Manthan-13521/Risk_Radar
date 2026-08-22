@@ -10,13 +10,13 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b" style={{ borderColor: '#D5C8C5' }}>
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight text-white">{title}</h1>
+          <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>{title}</h1>
           {badge}
         </div>
-        {subtitle && <p className="text-xs text-zinc-400 mt-1">{subtitle}</p>}
+        {subtitle && <p className="text-sm mt-1" style={{ color: '#6F6664' }}>{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>

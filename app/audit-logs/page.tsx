@@ -1,79 +1,70 @@
 export const dynamic = 'force-dynamic';
 
 import { getAuditLogs } from '@/lib/audit-service';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { EmptyState } from '@/components/ui/EmptyState';
 
 export default async function AuditLogsPage() {
   const logs = await getAuditLogs(100);
 
+  function sevColor(sev: string) {
+    if (sev === 'critical') return { bg: 'rgba(153,0,17,0.1)', color: '#990011' };
+    if (sev === 'warning') return { bg: 'rgba(184,106,0,0.1)', color: '#B86A00' };
+    return { bg: 'rgba(111,102,100,0.1)', color: '#6F6664' };
+  }
+
   return (
-    <div className="p-6 space-y-6 max-w-[1400px]">
-      <PageHeader
-        title="Immutable Audit Logs"
-        subtitle="Cryptographic-grade telemetry logging every investigation, policy change, and threat action."
-        badge={
-          <span className="text-xs bg-zinc-800 text-zinc-300 px-2.5 py-0.5 rounded font-mono">
-            {logs.length} AUDIT EVENTS
-          </span>
-        }
-      />
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#FCF6F5' }}>
+      {/* Header */}
+      <div className="border-b pb-6" style={{ borderColor: '#D5C8C5' }}>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Security Governance</div>
+        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>IMMUTABLE SECURITY LOG</h1>
+        <p className="text-sm mt-1" style={{ color: '#6F6664' }}>
+          Cryptographic-grade telemetry logging every investigation, policy change, and threat action.
+        </p>
+        <div className="mt-3 inline-flex px-3 py-1.5 rounded-lg border text-xs font-bold" style={{ background: '#F0E8E6', borderColor: '#D5C8C5', color: '#6F6664' }}>
+          {logs.length} AUDIT EVENTS
+        </div>
+      </div>
 
       {logs.length === 0 ? (
-        <EmptyState
-          icon="📜"
-          title="No Audit Logs"
-          description="Security events such as investigations, policy toggles, and incident resolutions will be recorded here automatically."
-        />
+        <div className="p-12 text-center rounded-2xl border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <div className="text-lg font-extrabold mb-2" style={{ color: '#111111' }}>NO AUDIT EVENTS YET</div>
+          <p className="text-sm" style={{ color: '#6F6664' }}>Security events such as investigations, policy toggles, and incident resolutions will be recorded here automatically.</p>
+        </div>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-xl">
+        <div className="rounded-xl border overflow-hidden" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-zinc-950/80 border-b border-zinc-800 text-zinc-400 uppercase text-[10px]">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b" style={{ borderColor: '#D5C8C5', background: '#E7DEDC' }}>
                 <tr>
-                  <th className="p-4">Timestamp</th>
-                  <th className="p-4">Event Type</th>
-                  <th className="p-4">Actor</th>
-                  <th className="p-4">Severity</th>
-                  <th className="p-4">Outcome</th>
-                  <th className="p-4">Target / ID</th>
+                  {['Timestamp', 'Event Type', 'Actor', 'Severity', 'Outcome', 'Target / ID'].map(h => (
+                    <th key={h} className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {logs.map((log, idx) => (
-                  <tr key={idx} className="hover:bg-zinc-800/40 transition">
-                    <td className="p-4 whitespace-nowrap text-zinc-400 font-sans">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </td>
-                    <td className="p-4 text-blue-300 font-bold uppercase">
-                      {log.eventType.replace(/_/g, ' ')}
-                    </td>
-                    <td className="p-4 text-zinc-300 font-sans">{log.actor}</td>
-                    <td className="p-4">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                          log.severity === 'critical'
-                            ? 'bg-red-950 text-red-300'
-                            : log.severity === 'warning'
-                            ? 'bg-amber-950 text-amber-300'
-                            : 'bg-zinc-800 text-zinc-300'
-                        }`}
-                      >
-                        {log.severity}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`text-[10px] font-bold uppercase ${
-                          log.result === 'success' ? 'text-emerald-400' : 'text-red-400'
-                        }`}
-                      >
-                        {log.result}
-                      </span>
-                    </td>
-                    <td className="p-4 text-zinc-400 truncate max-w-xs">{log.objectId || 'N/A'}</td>
-                  </tr>
-                ))}
+              <tbody className="divide-y font-mono" style={{ borderColor: '#D5C8C5' }}>
+                {logs.map((log, idx) => {
+                  const { bg, color } = sevColor(log.severity);
+                  return (
+                    <tr key={idx} className="transition hover:bg-white/30">
+                      <td className="px-4 py-3 whitespace-nowrap" style={{ color: '#6F6664' }}>
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 font-bold uppercase" style={{ color: '#990011' }}>
+                        {log.eventType.replace(/_/g, ' ')}
+                      </td>
+                      <td className="px-4 py-3" style={{ color: '#111111' }}>{log.actor}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold" style={{ background: bg, color }}>{log.severity}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[10px] font-bold uppercase" style={{ color: log.result === 'success' ? '#176B52' : '#990011' }}>
+                          {log.result}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 truncate max-w-xs" style={{ color: '#6F6664' }}>{log.objectId || 'N/A'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         fileHeuristics = analysis.heuristics;
 
         if (!analysis.isSupportedForText) {
-          content = `[File type ${analysis.metadata.extension} received. ShieldSense performed structural analysis only. No text was extracted.]`;
+          content = `[File type ${analysis.metadata.extension} received. Risk_Radar performed structural analysis only. No text was extracted.]`;
         } else {
           content = analysis.text;
           if (analysis.isTruncated) {

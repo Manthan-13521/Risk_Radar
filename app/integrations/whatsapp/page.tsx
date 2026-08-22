@@ -1,70 +1,88 @@
 export const dynamic = 'force-dynamic';
 
-import { PageHeader } from '@/components/ui/PageHeader';
-import { HealthIndicator } from '@/components/ui/HealthIndicator';
-
 export default async function WhatsAppIntegrationPage() {
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const hasToken = Boolean(process.env.WHATSAPP_ACCESS_TOKEN);
   const isConfigured = Boolean(phoneId && hasToken);
 
   return (
-    <div className="p-6 space-y-6 max-w-[1200px]">
-      <PageHeader
-        title="WhatsApp Security Gateway"
-        subtitle="Conversational endpoint for users to forward suspicious messages, voice notes, and URLs directly from WhatsApp."
-        badge={
-          <span className="text-xs bg-emerald-950/80 border border-emerald-800/60 text-emerald-300 px-2.5 py-0.5 rounded font-mono">
-            {isConfigured ? 'GATEWAY ONLINE' : 'NOT CONFIGURED'}
-          </span>
-        }
-      />
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#FCF6F5' }}>
+      {/* Header */}
+      <div className="border-b pb-6" style={{ borderColor: '#D5C8C5' }}>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Integrations</div>
+        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>WHATSAPP SECURITY GATEWAY</h1>
+        <p className="text-sm mt-1" style={{ color: '#6F6664' }}>
+          Conversational endpoint for users to forward suspicious messages, voice notes, and URLs directly from WhatsApp.
+        </p>
+        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold"
+          style={{
+            background: isConfigured ? 'rgba(23,107,82,0.08)' : 'rgba(111,102,100,0.08)',
+            borderColor: isConfigured ? 'rgba(23,107,82,0.2)' : '#D5C8C5',
+            color: isConfigured ? '#176B52' : '#6F6664',
+          }}>
+          <span className="w-2 h-2 rounded-full bg-current" />
+          {isConfigured ? 'GATEWAY ONLINE' : 'NOT CONFIGURED'}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Connection State */}
         <div className="space-y-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6F6664' }}>
             WhatsApp Cloud API Status
-          </h2>
+          </div>
 
-          <HealthIndicator
-            label="Meta WhatsApp Cloud API"
-            status={isConfigured ? 'healthy' : 'not_configured'}
-            detail={isConfigured ? `Phone ID: ${phoneId?.substring(0, 6)}...` : 'Credentials not configured'}
-          />
+          <div
+            className="rounded-xl border p-5"
+            style={{
+              background: isConfigured ? 'rgba(23,107,82,0.06)' : '#F0E8E6',
+              borderColor: isConfigured ? 'rgba(23,107,82,0.2)' : '#D5C8C5',
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-bold text-sm" style={{ color: '#111111' }}>Meta WhatsApp Cloud API</div>
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase" style={{ color: isConfigured ? '#176B52' : '#6F6664' }}>
+                <span className="w-2 h-2 rounded-full bg-current" />
+                {isConfigured ? 'Healthy' : 'Not Configured'}
+              </div>
+            </div>
+            <div className="text-xs" style={{ color: '#6F6664' }}>
+              {isConfigured ? `Phone ID: ${phoneId?.substring(0, 6)}...` : 'Credentials not configured'}
+            </div>
+          </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-3 text-xs">
-            <h3 className="font-semibold text-zinc-200">Webhook Endpoint URL</h3>
-            <div className="p-2.5 bg-zinc-950 border border-zinc-800 rounded font-mono text-zinc-400 break-all">
+          <div className="rounded-2xl border p-5 space-y-3 text-xs" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+            <div className="font-bold text-sm" style={{ color: '#111111' }}>Webhook Endpoint URL</div>
+            <div className="p-3 rounded-xl font-mono border break-all" style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#990011' }}>
               /api/whatsapp/webhook
             </div>
-            <p className="text-zinc-500">
+            <p style={{ color: '#6F6664' }}>
               Configure this webhook URL inside Meta Developer Portal to receive real-time forwarded scam messages.
             </p>
           </div>
         </div>
 
         {/* Integration Instructions */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">
+        <div className="rounded-2xl border p-6 space-y-4" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#111111' }}>
             Setup Instructions
-          </h2>
+          </div>
 
-          <div className="space-y-3 text-xs text-zinc-400 leading-relaxed">
-            <div className="flex gap-3">
-              <span className="font-mono text-blue-400 font-bold">1.</span>
+          <div className="space-y-3 text-xs leading-relaxed" style={{ color: '#6F6664' }}>
+            <div className="flex gap-3 p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span className="font-mono font-bold" style={{ color: '#990011' }}>1.</span>
               <span>Register a WhatsApp Cloud API application in Meta Developer Console.</span>
             </div>
-            <div className="flex gap-3">
-              <span className="font-mono text-blue-400 font-bold">2.</span>
+            <div className="flex gap-3 p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span className="font-mono font-bold" style={{ color: '#990011' }}>2.</span>
               <span>
-                Set <code className="text-zinc-200 font-mono">WHATSAPP_PHONE_NUMBER_ID</code> and{' '}
-                <code className="text-zinc-200 font-mono">WHATSAPP_ACCESS_TOKEN</code> in your environment variables.
+                Set <code className="font-mono font-bold" style={{ color: '#111111' }}>WHATSAPP_PHONE_NUMBER_ID</code> and{' '}
+                <code className="font-mono font-bold" style={{ color: '#111111' }}>WHATSAPP_ACCESS_TOKEN</code> in your environment variables.
               </span>
             </div>
-            <div className="flex gap-3">
-              <span className="font-mono text-blue-400 font-bold">3.</span>
-              <span>Subscribe to the <code className="text-zinc-200 font-mono">messages</code> webhook topic.</span>
+            <div className="flex gap-3 p-3 rounded-xl border" style={{ background: '#FCF6F5', borderColor: '#D5C8C5' }}>
+              <span className="font-mono font-bold" style={{ color: '#990011' }}>3.</span>
+              <span>Subscribe to the <code className="font-mono font-bold" style={{ color: '#111111' }}>messages</code> webhook topic.</span>
             </div>
           </div>
         </div>

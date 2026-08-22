@@ -38,21 +38,36 @@ export function IncidentActions({
       <button
         onClick={() => handleUpdate('investigating', 'Analyst actively investigating')}
         disabled={loading || status === 'investigating'}
-        className="px-3 py-1.5 bg-blue-900/60 hover:bg-blue-800 disabled:opacity-50 text-blue-200 text-xs font-semibold rounded border border-blue-700/50 transition"
+        className="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 border"
+        style={{
+          background: status === 'investigating' ? '#B86A00' : '#FCF6F5',
+          color: status === 'investigating' ? '#ffffff' : '#B86A00',
+          borderColor: '#B86A00',
+        }}
       >
         Mark Investigating
       </button>
       <button
         onClick={() => handleUpdate('contained', 'Threat simulated quarantine enacted')}
         disabled={loading || status === 'contained'}
-        className="px-3 py-1.5 bg-amber-900/60 hover:bg-amber-800 disabled:opacity-50 text-amber-200 text-xs font-semibold rounded border border-amber-700/50 transition"
+        className="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 border"
+        style={{
+          background: status === 'contained' ? '#990011' : '#FCF6F5',
+          color: status === 'contained' ? '#ffffff' : '#990011',
+          borderColor: '#990011',
+        }}
       >
         Mark Contained
       </button>
       <button
         onClick={() => handleUpdate('resolved', 'Analyst marked incident as remediated')}
         disabled={loading || status === 'resolved'}
-        className="px-3 py-1.5 bg-emerald-900/60 hover:bg-emerald-800 disabled:opacity-50 text-emerald-200 text-xs font-semibold rounded border border-emerald-700/50 transition"
+        className="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50 border"
+        style={{
+          background: status === 'resolved' ? '#176B52' : '#FCF6F5',
+          color: status === 'resolved' ? '#ffffff' : '#176B52',
+          borderColor: '#176B52',
+        }}
       >
         Mark Resolved
       </button>

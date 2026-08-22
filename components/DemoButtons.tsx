@@ -18,13 +18,13 @@ export default function DemoButtons({ demoBank, demoBank2, demoDelivery, demoLeg
   };
 
   return (
-    <div className="pt-6 mt-6 border-t border-zinc-800">
-      <p className="text-sm text-zinc-400 mb-3 uppercase tracking-wider">Demo Scenarios:</p>
+    <div className="pt-6 mt-6 border-t" style={{ borderColor: '#D5C8C5' }}>
+      <p className="text-[10px] uppercase font-bold tracking-widest mb-3" style={{ color: '#6F6664' }}>Demo Scenarios:</p>
       <div className="flex flex-wrap gap-2">
-        <button onClick={() => setDemo(demoBank)} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Bank Phishing</button>
-        <button onClick={() => setDemo(demoBank2)} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Bank Phishing (Variant)</button>
-        <button onClick={() => setDemo(demoDelivery)} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Delivery Scam</button>
-        <button onClick={() => setDemo(demoLegit)} type="button" className="text-sm bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded transition">Demo: Legitimate Message</button>
+        <button onClick={() => setDemo(demoBank)} type="button" className="text-xs px-3.5 py-2 rounded-xl font-bold border transition hover:bg-white/40" style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}>Demo: Bank Phishing</button>
+        <button onClick={() => setDemo(demoBank2)} type="button" className="text-xs px-3.5 py-2 rounded-xl font-bold border transition hover:bg-white/40" style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}>Demo: Bank Phishing (Variant)</button>
+        <button onClick={() => setDemo(demoDelivery)} type="button" className="text-xs px-3.5 py-2 rounded-xl font-bold border transition hover:bg-white/40" style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}>Demo: Delivery Scam</button>
+        <button onClick={() => setDemo(demoLegit)} type="button" className="text-xs px-3.5 py-2 rounded-xl font-bold border transition hover:bg-white/40" style={{ background: '#FCF6F5', borderColor: '#D5C8C5', color: '#111111' }}>Demo: Legitimate Message</button>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: 'ok',
-      service: 'ShieldSense',
+      service: 'Risk_Radar',
       timestamp: new Date().toISOString(),
     },
     {

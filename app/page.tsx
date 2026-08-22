@@ -6,226 +6,154 @@ import { getIncidents } from '@/lib/incident-service';
 import InvestigateForm from '@/components/InvestigateForm';
 
 const DEMO_CASES = [
-  { label: 'Bank Phishing', type: 'url', content: 'https://paypa1-security.example.invalid/login', icon: '🎯', badge: 'Critical' },
-  { label: 'Delivery Fee Scam', type: 'message', content: 'Your package could not be delivered. Pay a ₹49 redelivery fee immediately using the link: https://deliv-pay.top/track', icon: '📦', badge: 'Dangerous' },
-  { label: 'Account Suspension', type: 'message', content: 'FINAL WARNING: Verify your HDFC banking account today or access will be disabled. Complete identity verification immediately.', icon: '💳', badge: 'Dangerous' },
-  { label: 'Safe Website', type: 'url', content: 'https://www.google.com/search?q=cybersecurity+threat+intelligence', icon: '✅', badge: 'Safe' },
+  { label: 'Bank Phishing', type: 'url', content: 'https://paypa1-security.example.invalid/login', cls: 'critical' },
+  { label: 'Delivery Scam', type: 'message', content: 'Your package could not be delivered. Pay a ₹49 redelivery fee immediately using the link: https://deliv-pay.top/track', cls: 'dangerous' },
+  { label: 'Account Suspension', type: 'message', content: 'FINAL WARNING: Verify your HDFC banking account today or access will be disabled.', cls: 'dangerous' },
+  { label: 'Safe Website', type: 'url', content: 'https://www.google.com/search?q=cybersecurity', cls: 'safe' },
 ];
 
-function formatTagName(tag: string): string {
-  return tag
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+function clsStyle(cls: string): { bg: string; color: string } {
+  if (cls === 'critical') return { bg: '#76000D', color: '#fff' };
+  if (cls === 'dangerous') return { bg: '#990011', color: '#fff' };
+  if (cls === 'suspicious') return { bg: '#B86A00', color: '#fff' };
+  return { bg: '#176B52', color: '#fff' };
+}
+
+function formatIntent(s: string) {
+  return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export default async function DashboardPage() {
-  const [stats, rawIncidents] = await Promise.all([
-    getDashboardStats(),
-    getIncidents(6),
-  ]);
-
+  const [stats, incidents] = await Promise.all([getDashboardStats(), getIncidents(6)]);
   const total = stats.totalScans || 0;
-  const threatsCount = stats.threatsDetected || 0;
-  const safeCount = stats.safeCount || 0;
-  const recentScans = stats.recentScans || [];
+  const threats = stats.threatsDetected || 0;
+  const safe = stats.safeCount || 0;
+  const activeIncidents = incidents.filter(i => i.status !== 'resolved').length;
+  const recent = (stats.recentScans || []).slice(0, 5);
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-8 max-w-[1250px] mx-auto bg-black text-white">
-      {/* 1. HERO SECTION: Clean, Focused, Immediate Action */}
-      <div className="text-center sm:text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#181818] pb-6">
-        <div>
-          <div className="flex items-center justify-center sm:justify-start gap-2.5">
-            <span className="text-xl">🛡</span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              SHIELDSENSE
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 shadow-[0_0_10px_rgba(52,211,153,0.25)]">
-              IMMUNE SYSTEM ACTIVE
-            </span>
+    <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-10" style={{ background: '#FCF6F5' }}>
+
+      {/* HERO */}
+      <div className="space-y-5 pb-8 border-b" style={{ borderColor: '#D5C8C5' }}>
+        <div className="space-y-2">
+          <div className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: '#990011' }}>
+            Risk_Radar · Digital Immune System
           </div>
-          <p className="text-sm text-zinc-400 mt-1 font-sans">
-            Digital Security Command Center — <strong className="text-zinc-200">Investigate before you interact.</strong>
+          <h1 className="text-5xl md:text-7xl font-extrabold leading-none tracking-tight" style={{ color: '#111111' }}>
+            INVESTIGATE<br />BEFORE YOU<br />INTERACT.
+          </h1>
+          <p className="text-base mt-3 max-w-lg" style={{ color: '#6F6664' }}>
+            Analyze suspicious links, messages and files before they become incidents.
           </p>
         </div>
-
-        <div className="flex items-center justify-center sm:justify-end gap-3">
-          <Link
-            href="/incidents"
-            className="px-3.5 py-2 bg-[#0e0e0e] hover:bg-[#181818] border border-[#222222] rounded-xl text-xs font-semibold text-zinc-300 transition"
-          >
-            Incidents ({rawIncidents.filter((i) => i.status !== 'resolved').length})
-          </Link>
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/scanner"
-            className="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-black font-bold rounded-xl text-xs transition shadow-[0_0_15px_rgba(20,184,166,0.3)] flex items-center gap-1.5"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-extrabold text-white tracking-wide"
+            style={{ background: '#990011' }}
           >
-            <span>⚡</span>
-            <span>Scan Anything →</span>
+            INVESTIGATE AN ARTIFACT →
+          </Link>
+          <Link
+            href="/incidents"
+            className="inline-flex items-center px-5 py-3.5 rounded-xl text-sm font-bold border"
+            style={{ borderColor: '#D5C8C5', color: '#111111' }}
+          >
+            View Incidents ({activeIncidents})
           </Link>
         </div>
       </div>
 
-      {/* 2. HERO SCANNER: The Centerpiece of the Product */}
-      <div className="bg-[#0a0a0a] border border-[#222222] hover:border-zinc-700/80 transition rounded-2xl p-6 md:p-8 shadow-2xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1c1c1c] pb-4">
+      {/* HERO SCANNER */}
+      <div className="rounded-2xl border p-6 md:p-8 space-y-5" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b" style={{ borderColor: '#D5C8C5' }}>
           <div>
-            <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2.5">
-              <span className="text-teal-400 text-xl">🔍</span>
-              <span>Investigate an Artifact</span>
-            </h2>
-            <p className="text-xs md:text-sm text-zinc-400 mt-0.5">
-              Analyze a suspicious URL, message, email, or file before you interact with it.
-            </p>
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Primary Investigation Interface</div>
+            <h2 className="text-xl font-extrabold" style={{ color: '#111111' }}>INVESTIGATE AN ARTIFACT</h2>
+            <p className="text-sm mt-0.5" style={{ color: '#6F6664' }}>Paste a URL, message, email or suspicious content.</p>
           </div>
-
-          {/* Quick Demo Badges */}
-          <div className="flex items-center gap-1.5 self-start sm:self-auto">
-            <span className="text-[11px] font-mono text-zinc-500 uppercase font-semibold mr-1">Demo:</span>
-            {DEMO_CASES.map((d) => (
-              <Link
-                key={d.label}
-                href={`/scanner?type=${d.type}&content=${encodeURIComponent(d.content)}`}
-                className="px-2.5 py-1 bg-[#141414] hover:bg-teal-950/60 hover:text-teal-300 hover:border-teal-700/50 border border-[#262626] rounded-lg text-[11px] font-medium text-zinc-300 transition flex items-center gap-1"
-                title={d.content}
-              >
-                <span>{d.icon}</span>
-                <span className="hidden md:inline">{d.label}</span>
-              </Link>
-            ))}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-widest mr-1" style={{ color: '#6F6664' }}>Demo:</span>
+            {DEMO_CASES.map(d => {
+              const { bg, color } = clsStyle(d.cls);
+              return (
+                <Link
+                  key={d.label}
+                  href={`/scanner?type=${d.type}&content=${encodeURIComponent(d.content)}`}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                  style={{ background: bg, color }}
+                >
+                  {d.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
-
-        {/* Primary Investigation Form */}
         <InvestigateForm />
       </div>
 
-      {/* 3. SECURITY PULSE: 4 High-Impact Metrics */}
-      <div className="space-y-3">
-        <div className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
-          <span>⚡</span>
-          <span>Security Pulse & Telemetry</span>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {/* Total Scans */}
-          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg">
-            <div className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">
-              Total Investigations
+      {/* SECURITY PULSE */}
+      <div>
+        <div className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: '#6F6664' }}>Security Pulse</div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'INVESTIGATIONS', value: total, sub: `${stats.todayScans ?? 0} today`, color: '#111111' },
+            { label: 'THREATS', value: threats, sub: `${stats.criticalCount ?? 0} critical`, color: '#990011' },
+            { label: 'INCIDENTS', value: activeIncidents, sub: 'requiring review', color: '#B86A00' },
+            { label: 'SAFE', value: safe, sub: 'zero false allows', color: '#176B52' },
+          ].map(m => (
+            <div key={m.label} className="rounded-xl border p-5" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+              <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#6F6664' }}>{m.label}</div>
+              <div className="text-3xl font-extrabold" style={{ color: m.color }}>{m.value}</div>
+              <div className="text-xs mt-1" style={{ color: '#6F6664' }}>{m.sub}</div>
             </div>
-            <div className="my-2">
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
-                {total}
-              </div>
-            </div>
-            <div className="text-[11px] text-zinc-400 font-mono">
-              {stats.todayScans} scans today
-            </div>
-          </div>
-
-          {/* Threats Detected */}
-          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg">
-            <div className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">
-              Threats Intercepted
-            </div>
-            <div className="my-2">
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-red-400">
-                {threatsCount}
-              </div>
-            </div>
-            <div className="text-[11px] text-red-400 font-mono font-medium">
-              {stats.criticalCount} Critical • {stats.dangerousCount} High Risk
-            </div>
-          </div>
-
-          {/* Blocked Threats */}
-          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg">
-            <div className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">
-              Active Incidents
-            </div>
-            <div className="my-2">
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-400">
-                {rawIncidents.filter((i) => i.status !== 'resolved').length}
-              </div>
-            </div>
-            <div className="text-[11px] text-amber-300 font-mono">
-              Requiring security review
-            </div>
-          </div>
-
-          {/* Verified Clean */}
-          <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-lg">
-            <div className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider">
-              Safe Requests
-            </div>
-            <div className="my-2">
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400">
-                {safeCount}
-              </div>
-            </div>
-            <div className="text-[11px] text-emerald-400 font-mono font-medium">
-              Zero False ALLOWs
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* 4. RECENT INVESTIGATIONS & THREAT DNA ACTIVITY (Clean 2-Column Split) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-        {/* Left: Recent Investigations Stream */}
-        <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-2xl p-5 md:p-6 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-[#1c1c1c] pb-3">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 font-mono">
-              <span>📋</span>
-              <span>Recent Investigations</span>
-            </h2>
-            <Link href="/history" className="text-xs text-teal-400 hover:underline">
-              View All ({total}) →
-            </Link>
+      {/* RECENT + THREAT DNA */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Investigations */}
+        <div className="rounded-xl border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#D5C8C5' }}>
+            <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#111111' }}>Recent Investigations</div>
+            <Link href="/history" className="text-xs font-bold" style={{ color: '#990011' }}>View All ({total}) →</Link>
           </div>
-
-          {recentScans.length === 0 ? (
-            <div className="p-8 text-center text-xs text-zinc-500">
-              No investigations yet. Submit your first URL or message above.
+          {recent.length === 0 ? (
+            <div className="p-8 text-center space-y-3">
+              <div className="text-lg font-extrabold" style={{ color: '#111111' }}>NO INVESTIGATIONS YET</div>
+              <p className="text-xs" style={{ color: '#6F6664' }}>Risk_Radar has not analyzed any artifacts yet.</p>
+              <Link href="/scanner" className="inline-flex px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: '#990011' }}>SCAN SOMETHING →</Link>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {recentScans.slice(0, 5).map((scan) => {
-                const isThreat = scan.classification === 'critical' || scan.classification === 'dangerous';
-                const isSuspicious = scan.classification === 'suspicious';
-                const badgeStyle = isThreat
-                  ? 'bg-red-950/90 text-red-400 border-red-800/80'
-                  : isSuspicious
-                  ? 'bg-amber-950/90 text-amber-400 border-amber-800/80'
-                  : 'bg-emerald-950/90 text-emerald-400 border-emerald-800/80';
-
+            <div className="divide-y" style={{ borderColor: '#D5C8C5' }}>
+              {recent.map(s => {
+                const isThreat = s.classification === 'critical' || s.classification === 'dangerous';
+                const isSusp = s.classification === 'suspicious';
+                const accentColor = isThreat ? '#990011' : isSusp ? '#B86A00' : '#176B52';
+                const { bg, color } = clsStyle(String(s.classification));
                 return (
-                  <Link
-                    key={String(scan._id)}
-                    href={`/investigate/${String(scan._id)}`}
-                    className="p-3 bg-[#111111] hover:bg-[#181818] border border-[#222222] hover:border-zinc-700 rounded-xl flex items-center justify-between gap-3 transition group"
-                  >
+                  <Link key={String(s._id)} href={`/investigate/${String(s._id)}`}
+                    className="flex items-center gap-4 px-5 py-3.5 transition hover:bg-white/40">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${badgeStyle}`}>
-                          {String(scan.classification)}
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase" style={{ background: bg, color }}>
+                          {String(s.classification)}
                         </span>
-                        <span className="text-xs font-semibold text-zinc-200 group-hover:text-teal-300 transition truncate">
-                          {scan.inputType === 'file'
-                            ? (scan.inputMetadata as Record<string, unknown>)?.filename as string
-                            : (scan.inputMetadata as Record<string, unknown>)?.truncatedContent as string}
+                        <span className="text-xs font-semibold truncate" style={{ color: '#111111' }}>
+                          {s.inputType === 'file'
+                            ? (s.inputMetadata as Record<string, unknown>)?.filename as string
+                            : (s.inputMetadata as Record<string, unknown>)?.truncatedContent as string}
                         </span>
                       </div>
-                      <div className="text-[11px] text-zinc-500 font-mono capitalize">
-                        {String(scan.inputType)} • {String(scan.attackerIntent || 'benign').replace(/_/g, ' ')} • {new Date(scan.createdAt as string).toLocaleTimeString()}
+                      <div className="text-[11px] font-mono capitalize" style={{ color: '#6F6664' }}>
+                        {String(s.inputType)} · {formatIntent(String(s.attackerIntent || 'unknown'))}
                       </div>
                     </div>
-
                     <div className="text-right shrink-0">
-                      <div className={`text-sm font-bold font-mono ${isThreat ? 'text-red-400' : isSuspicious ? 'text-amber-400' : 'text-teal-400'}`}>
-                        {Number(scan.riskScore)}/100
-                      </div>
-                      <span className="text-[10px] text-zinc-500">Risk</span>
+                      <div className="text-sm font-extrabold font-mono" style={{ color: accentColor }}>{Number(s.riskScore)}</div>
+                      <div className="text-[10px]" style={{ color: '#6F6664' }}>risk</div>
                     </div>
                   </Link>
                 );
@@ -234,51 +162,31 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* Right: Threat DNA Behavioral Activity */}
-        <div className="bg-[#0a0a0a] border border-[#1c1c1c] rounded-2xl p-5 md:p-6 space-y-4 shadow-xl flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-[#1c1c1c] pb-3 mb-4">
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 font-mono">
-                <span>🧬</span>
-                <span>Threat DNA Activity</span>
-              </h2>
-              <Link href="/threat-dna" className="text-xs text-teal-400 hover:underline">
-                Explorer →
-              </Link>
-            </div>
-
-            <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-              ShieldSense clusters observed attacker behavior using Jaccard vector similarity to recognize attacks even when URLs or messages are rewritten.
+        {/* Threat DNA */}
+        <div className="rounded-xl border" style={{ background: '#F0E8E6', borderColor: '#D5C8C5' }}>
+          <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: '#D5C8C5' }}>
+            <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#111111' }}>Threat DNA Activity</div>
+            <Link href="/threat-dna" className="text-xs font-bold" style={{ color: '#990011' }}>Explorer →</Link>
+          </div>
+          <div className="p-5 space-y-4">
+            <p className="text-xs leading-relaxed" style={{ color: '#6F6664' }}>
+              Risk_Radar clusters attacker behavior using Jaccard vector similarity — recognizing attacks even when URLs or messages are rewritten.
             </p>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {stats.topDnaTags.length > 0 ? (
-                stats.topDnaTags.slice(0, 8).map((tag) => (
-                  <span
-                    key={tag.tag}
-                    className="px-3 py-1.5 bg-[#111111] text-teal-300 border border-[#222222] rounded-lg text-xs font-mono flex items-center gap-1.5"
-                  >
-                    <span>{formatTagName(tag.tag)}</span>
-                    <span className="text-[10px] text-zinc-500">({tag.count})</span>
+            <div className="flex flex-wrap gap-2">
+              {stats.topDnaTags && stats.topDnaTags.length > 0 ? (
+                stats.topDnaTags.slice(0, 8).map((tag: { tag: string; count: number }) => (
+                  <span key={tag.tag} className="px-3 py-1.5 rounded-lg border text-xs font-mono" style={{ background: '#E7DEDC', borderColor: '#D5C8C5', color: '#111111' }}>
+                    {tag.tag.replace(/_/g, ' ')} <span style={{ color: '#6F6664' }}>({tag.count})</span>
                   </span>
                 ))
               ) : (
-                <span className="text-xs text-zinc-500">No behavioral clusters detected yet.</span>
+                <span className="text-xs" style={{ color: '#6F6664' }}>No behavioral clusters detected yet.</span>
               )}
             </div>
-          </div>
-
-          {/* Quick link banner to Policies & Knowledge */}
-          <div className="p-3.5 bg-[#0e1422] border border-teal-900/40 rounded-xl flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2.5">
-              <span className="text-teal-400 text-base">🛡</span>
-              <span className="text-xs text-zinc-300 font-medium">
-                Authoritative Policy & Fact Engine Active
-              </span>
+            <div className="rounded-lg border p-3.5 flex items-center justify-between" style={{ background: 'rgba(153,0,17,0.06)', borderColor: 'rgba(153,0,17,0.2)' }}>
+              <div className="text-xs font-semibold" style={{ color: '#111111' }}>Authoritative Policy Engine Active</div>
+              <Link href="/policies" className="text-xs font-bold" style={{ color: '#990011' }}>View Rules →</Link>
             </div>
-            <Link href="/policies" className="text-xs text-teal-400 hover:text-teal-300 font-bold">
-              View Rules →
-            </Link>
           </div>
         </div>
       </div>

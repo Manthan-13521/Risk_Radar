@@ -11,30 +11,35 @@ interface NavItem {
   icon: string;
 }
 
-interface NavGroup {
+interface NavSection {
   title?: string;
   items: NavItem[];
 }
 
-const NAV_GROUPS: NavGroup[] = [
+const NAV_SECTIONS: NavSection[] = [
   {
+    title: 'CORE',
     items: [
-      { label: 'Executive', href: '/', icon: '🏛️' },
       { label: 'Dashboard', href: '/', icon: '⬡' },
-      { label: 'Mission Control', href: '/ai-health', icon: '🎯' },
-      { label: 'Incidents', href: '/incidents', icon: '🚨' },
       { label: 'Scanner', href: '/investigate', icon: '🔍' },
+      { label: 'Incidents', href: '/incidents', icon: '🚨' },
       { label: 'Scan History', href: '/history', icon: '📋' },
+    ],
+  },
+  {
+    title: 'INTELLIGENCE',
+    items: [
       { label: 'Threat DNA', href: '/threat-dna', icon: '🧬' },
-      { label: 'Intelligence', href: '/intelligence', icon: '🌐' },
-      { label: 'AI Models', href: '/ai-models', icon: '🤖' },
-      { label: 'Voice Assistant', href: '/voice', icon: '🔊' },
+      { label: 'Threat Intel', href: '/intelligence', icon: '🌐' },
+    ],
+  },
+  {
+    title: 'GOVERNANCE & AI',
+    items: [
       { label: 'Policies', href: '/policies', icon: '🛡️' },
       { label: 'Knowledge Center', href: '/knowledge', icon: '📚' },
-      { label: 'Evaluation Lab', href: '/evaluation', icon: '🧪' },
+      { label: 'AI Health', href: '/ai-health', icon: '🤖' },
       { label: 'Audit Logs', href: '/audit-logs', icon: '📜' },
-      { label: 'WhatsApp', href: '/integrations/whatsapp', icon: '💬' },
-      { label: 'System Health', href: '/system', icon: '❤️' },
       { label: 'Settings', href: '/settings', icon: '⚙️' },
     ],
   },
@@ -80,11 +85,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#0b0f17] border-r border-zinc-800/80 select-none">
+    <div className="flex flex-col h-full bg-[#080c14] border-r border-zinc-800/80 select-none">
       {/* Brand Header */}
       <div className="p-4 flex items-center gap-3 border-b border-zinc-800/80">
-        <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center shadow-[0_0_12px_rgba(20,184,166,0.2)]">
-          <span className="text-teal-400 text-lg">🛡</span>
+        <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center shadow-[0_0_12px_rgba(20,184,166,0.25)]">
+          <span className="text-teal-400 text-base">🛡</span>
         </div>
         <div>
           <div className="text-white font-bold text-sm tracking-tight flex items-center gap-1.5">
@@ -92,52 +97,60 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-teal-400 font-mono text-xs">X</span>
           </div>
           <div className="text-zinc-500 text-[9px] uppercase tracking-widest font-medium">
-            AI GOVERNANCE FIREWALL
+            AI DIGITAL IMMUNE SYSTEM
           </div>
         </div>
       </div>
 
-      {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1 custom-scrollbar">
-        {NAV_GROUPS[0].items.map((item) => {
-          const active = isLinkActive(item.href);
-          return (
-            <Link
-              key={item.label + item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                active
-                  ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-[0_0_15px_rgba(20,184,166,0.12)] font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-              }`}
-            >
-              <span className="text-sm opacity-80">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+      {/* Navigation Sections */}
+      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+        {NAV_SECTIONS.map((sec, i) => (
+          <div key={i} className="space-y-1">
+            {sec.title && (
+              <div className="px-3 text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+                {sec.title}
+              </div>
+            )}
+            {sec.items.map((item) => {
+              const active = isLinkActive(item.href);
+              return (
+                <Link
+                  key={item.label + item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    active
+                      ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-[0_0_12px_rgba(20,184,166,0.15)] font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
+                  }`}
+                >
+                  <span className="text-sm opacity-80">{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* User Profile Card */}
       <div className="p-3 border-t border-zinc-800/80 bg-zinc-950/40">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60">
+        <div className="flex items-center justify-between p-2 rounded-lg bg-[#0e1422] border border-zinc-800/60">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-full bg-teal-950 border border-teal-700/50 flex items-center justify-center text-teal-300 text-[10px] font-bold shrink-0">
               MJ
             </div>
             <div className="min-w-0">
               <div className="text-xs font-medium text-zinc-200 truncate">Manthan Jaiswal</div>
-              <div className="text-[10px] text-zinc-500 truncate">Super Admin</div>
+              <div className="text-[10px] text-zinc-500 truncate">Security Officer</div>
             </div>
           </div>
-          <span className="text-zinc-500 text-xs">▾</span>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-[#07090e] text-white overflow-hidden antialiased">
+    <div className="flex h-screen bg-[#06090e] text-white overflow-hidden antialiased">
       {/* Interactive Command Palette Modal */}
       <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
 
@@ -160,7 +173,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main App Workspace */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Control Bar */}
-        <header className="h-12 bg-[#0b0f17]/95 backdrop-blur-md border-b border-zinc-800/80 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 shrink-0">
+        <header className="h-12 bg-[#080c14]/95 backdrop-blur-md border-b border-zinc-800/80 flex items-center justify-between px-4 gap-3 sticky top-0 z-30 shrink-0">
           {/* Left: Mobile Hamburger & System Status */}
           <div className="flex items-center gap-3">
             <button
@@ -185,7 +198,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             {/* Search / Command Palette trigger */}
             <button
               onClick={() => setCmdOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 transition shadow-inner"
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#0e1422] hover:bg-[#141d30] border border-zinc-800 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 transition shadow-inner"
             >
               <span>🔍</span>
               <span className="hidden md:inline">Search...</span>
@@ -194,29 +207,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </kbd>
             </button>
 
-            {/* Admin Role Badge */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900/80 border border-zinc-800 rounded-lg text-xs text-zinc-300">
-              <span className="text-teal-400 text-xs">🛡</span>
-              <span>Super Admin</span>
-              <span className="text-zinc-500 text-[10px]">▾</span>
-            </div>
-
             {/* Compliance Badge */}
-            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900/60 border border-zinc-800/80 rounded-lg text-[11px] font-mono text-zinc-400">
-              <span className="text-emerald-400">✓</span>
-              <span>SOC 2 · GDPR · HIPAA · PCI DSS</span>
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-[#0e1422] border border-zinc-800 rounded-lg text-[11px] font-mono text-zinc-400">
+              <span className="text-teal-400">🛡</span>
+              <span>Policy Governed</span>
             </div>
 
             {/* Live Clock Widget */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-300">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#06090e] border border-zinc-800 rounded-lg text-xs font-mono text-zinc-300">
               <span className="text-amber-400">⚡</span>
-              <span>{timeString || '22:11:00'}</span>
+              <span>{timeString || '22:34:00'}</span>
             </div>
 
             {/* Bell Notification */}
             <Link
               href="/incidents"
-              className="p-1.5 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition"
+              className="p-1.5 text-zinc-400 hover:text-white bg-[#0e1422] hover:bg-[#141d30] border border-zinc-800 rounded-lg transition"
               title="View Active Incidents"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,45 +235,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               <span>LIVE</span>
             </div>
-
-            {/* User Avatar button */}
-            <div className="w-7 h-7 rounded-full bg-teal-900/60 border border-teal-700/60 flex items-center justify-center text-teal-300 text-xs font-bold shadow-[0_0_8px_rgba(20,184,166,0.3)]">
-              MJ
-            </div>
           </div>
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto bg-[#07090e] custom-scrollbar">
+        <main className="flex-1 overflow-y-auto bg-[#06090e]">
           {children}
         </main>
 
-        {/* Bottom Telemetry & Status Bar (Matching Screenshot) */}
-        <footer className="h-6 bg-[#090d14] border-t border-zinc-800/80 px-3 flex items-center justify-between text-[10px] font-mono text-zinc-500 select-none shrink-0 overflow-x-auto whitespace-nowrap">
+        {/* Bottom Telemetry & Status Bar */}
+        <footer className="h-6 bg-[#080c14] border-t border-zinc-800/80 px-3 flex items-center justify-between text-[10px] font-mono text-zinc-500 select-none shrink-0 overflow-x-auto whitespace-nowrap">
           <div className="flex items-center gap-2">
-            <span className="text-zinc-600">redis</span>
-            <span className="text-zinc-400 font-semibold">standby</span>
-            <span>•</span>
             <span className="text-emerald-400">●</span>
-            <span className="text-zinc-400">ws-bridge connected</span>
+            <span className="text-zinc-400">AI Defense Engine Active</span>
+            <span>•</span>
+            <span className="text-zinc-500">Heuristics + LLM Dual Verification</span>
           </div>
 
           <div className="flex items-center gap-3 text-zinc-500">
-            <span>⏱ api 42ms</span>
+            <span className="text-teal-400">🛡 Zero False ALLOWs</span>
             <span>•</span>
-            <span>🖥 cpu 28%</span>
+            <span>Threat DNA Correlation Active</span>
             <span>•</span>
-            <span>💾 mem 19%</span>
-            <span>•</span>
-            <span>🖧 3 nodes</span>
-            <span>•</span>
-            <span className="text-teal-400 font-medium">feed active</span>
-            <span>•</span>
-            <span className="text-emerald-400">8 agents · healthy</span>
-            <span>•</span>
-            <span>ShieldSense v2.4</span>
-            <span>•</span>
-            <span className="text-blue-400">deploy production</span>
+            <span className="text-zinc-400">ShieldSense v2.4</span>
           </div>
         </footer>
       </div>

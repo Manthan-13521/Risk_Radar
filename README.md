@@ -4,11 +4,18 @@
 
 ShieldSense is an AI-powered behavioral security investigation platform that evaluates suspicious links, messages, and files. Rather than relying on simple URL blocklists or black-box safety scores, ShieldSense extracts heuristic signals, reasons about **Attacker Intent**, calculates deterministic **Risk and Confidence**, surfaces plain-language **Evidence**, remembers behavioral attack patterns through **Threat DNA**, and recommends confidence-aware response actions.
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=flat&logo=mongodb)](https://www.mongodb.com/)
-[![OpenRouter](https://img.shields.io/badge/OpenRouter-API-purple)](https://openrouter.ai/)
-[![Render](https://img.shields.io/badge/Render-Deployed-46E3B7?style=flat&logo=render)](https://render.com/)
+### 🛠️ Built With & Deployed On
+
+[![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![MongoDB Atlas](https://img.shields.io/badge/MongoDB_Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![OpenRouter AI](https://img.shields.io/badge/OpenRouter_AI-6466F1?style=for-the-badge&logo=openai&logoColor=white)](https://openrouter.ai/)
+[![OpenAI TTS](https://img.shields.io/badge/OpenAI_TTS-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
+[![Meta WhatsApp](https://img.shields.io/badge/Meta_WhatsApp_Cloud_API-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://developers.facebook.com/docs/whatsapp/cloud-api)
+[![Zod](https://img.shields.io/badge/Zod_Validation-3E67B1?style=for-the-badge&logo=zod&logoColor=white)](https://zod.dev/)
+[![Render](https://img.shields.io/badge/Render_Deployment-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com/)
 
 ---
 

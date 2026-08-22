@@ -238,6 +238,33 @@ export async function POST(req: Request) {
     };
 
     const result = await db.collection('scans').insertOne(scanDoc);
+    const insertedId = result.insertedId;
+
+    // Auto-create incident for high-risk scans (risk >= 60)
+    if (finalRisk >= 60) {
+      try {
+        const { createIncidentFromScan } = await import('@/lib/incident-service');
+        await createIncidentFromScan({ ...scanDoc, _id: insertedId });
+      } catch (e) {
+        console.error('[Incidents] Failed to create incident:', e);
+      }
+    }
+
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import('@/lib/audit-service');
+      await logAuditEvent({
+        eventType: finalRisk >= 60 ? 'threat_detected' : 'investigation_created',
+        actor: 'system',
+        objectId: insertedId.toString(),
+        objectType: 'scan',
+        severity: finalRisk >= 80 ? 'critical' : finalRisk >= 60 ? 'warning' : 'info',
+        result: 'success',
+        details: { riskScore: finalRisk, classification: finalClassification, intent: attackerIntent },
+      });
+    } catch {
+      // Audit log must never block response
+    }
 
     const dnaMatch =
       dnaOverlap.length > 0
@@ -250,7 +277,7 @@ export async function POST(req: Request) {
           }
         : { matched: false, similarity: 0 };
 
-    return NextResponse.json({ id: result.insertedId, result: scanDoc, dnaMatch });
+    return NextResponse.json({ id: insertedId, result: scanDoc, dnaMatch });
   } catch (error: unknown) {
     console.error('[ShieldSense/API] Investigation Pipeline Error:', (error as Error).message);
     return NextResponse.json(

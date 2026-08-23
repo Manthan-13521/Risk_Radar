@@ -7,6 +7,7 @@ import { getServerAuthSession } from '@/lib/auth/auth-options';
 import InvestigateForm from '@/components/InvestigateForm';
 import { IncidentListWithDrawer } from '@/components/IncidentListWithDrawer';
 import { IncidentItem } from '@/components/IncidentDrawer';
+import DemoVideoPlayer from '@/components/DemoVideoPlayer';
 
 function clsStyle(cls: string): { bg: string; color: string } {
   if (cls === 'critical') return { bg: '#76000D', color: '#fff' };
@@ -253,7 +254,7 @@ export default async function DashboardPage() {
           </div>
           <div className="p-5 space-y-4">
             <p className="text-xs leading-relaxed font-medium" style={{ color: '#554B49' }}>
-              ShieldSense clusters attacker behavioral vectors from your investigations — recognizing persistent attack campaigns across changing URLs.
+              Risk_Radar clusters attacker behavioral vectors from your investigations — recognizing persistent attack campaigns across changing URLs.
             </p>
             <div className="flex flex-wrap gap-2">
               {stats.topDnaTags && stats.topDnaTags.length > 0 ? (
@@ -285,6 +286,35 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ═══ EMBEDDED PRODUCT DEMO VIDEO ═══ */}
+      <div className="rounded-2xl border p-6 md:p-8 space-y-6 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b pb-4" style={{ borderColor: '#C4B5B0' }}>
+          <div>
+            <div className="text-[11px] font-extrabold uppercase tracking-[0.2em] mb-1.5" style={{ color: '#990011' }}>
+              Product Demo · 40 Seconds
+            </div>
+            <h2 className="text-2xl md:text-3xl font-extrabold leading-tight" style={{ color: '#111111' }}>
+              See Risk_Radar in Action
+            </h2>
+            <p className="text-sm mt-1.5 max-w-lg font-medium" style={{ color: '#554B49' }}>
+              One suspicious click. One investigation. One decision before it&apos;s too late.
+            </p>
+          </div>
+          <div
+            className="shrink-0 text-[10px] font-extrabold uppercase tracking-widest px-3.5 py-2 rounded-xl border self-start sm:self-auto"
+            style={{ background: 'rgba(153,0,17,0.07)', borderColor: 'rgba(153,0,17,0.2)', color: '#990011' }}
+          >
+            Watch how Risk_Radar investigates a suspicious banking URL.
+          </div>
+        </div>
+
+        <DemoVideoPlayer />
+
+        <p className="text-xs font-medium text-center" style={{ color: '#554B49' }}>
+          40 sec · Product Demo · No external links · All analysis runs on your own backend
+        </p>
       </div>
     </div>
   );

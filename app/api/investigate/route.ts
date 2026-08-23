@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { extractSignals, HeuristicSignal } from '@/lib/heuristics';
-
 import { findSimilarDNA } from '@/lib/dna';
 import { evaluateSecurityDecision, SecurityDecisionInput } from '@/lib/security-decision';
 import { enrichWithKnowledge } from '@/lib/knowledge-enrichment';
@@ -8,10 +7,64 @@ import { evaluateRuntimePolicies } from '@/lib/runtime-policy';
 import { getDb } from '@/lib/mongodb';
 import { sendWhatsAppAlert } from '@/lib/whatsapp';
 import { LLMOutput } from '@/types/investigation';
+import { ObjectId } from 'mongodb';
+
+// ---------------------------------------------------------------------------
+// Parse request: supports both multipart/form-data (from InvestigateForm)
+// and application/json (from API clients / evaluation scripts).
+// ---------------------------------------------------------------------------
+async function parseRequest(req: Request): Promise<{
+  content: string;
+  type: string;
+  metadata: Record<string, unknown>;
+  fileMetadata?: { filename: string; mimeType: string; size: number } | null;
+  fileBuffer?: Buffer | null;
+}> {
+  const contentType = req.headers.get('content-type') || '';
+
+  if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+    const formData = await req.formData();
+    const type = (formData.get('type') as string) || 'message';
+    let content = '';
+    let fileMetadata = null;
+    let fileBuffer: Buffer | null = null;
+
+    if (type === 'file') {
+      const file = formData.get('file') as File | null;
+      if (file) {
+        const arrayBuffer = await file.arrayBuffer();
+        fileBuffer = Buffer.from(arrayBuffer);
+        fileMetadata = { filename: file.name, mimeType: file.type, size: file.size };
+        // Extract text from file for heuristic analysis
+        try {
+          const { extractFileMetadataAndText } = await import('@/lib/file-analysis');
+          const analysis = await extractFileMetadataAndText(fileBuffer, file.name, file.type);
+          content = analysis.text || `[File: ${file.name}]`;
+        } catch {
+          content = `[File: ${file.name}]`;
+        }
+      }
+    } else {
+      content = (formData.get('content') as string) || '';
+    }
+
+    return { content, type, metadata: {}, fileMetadata, fileBuffer };
+  }
+
+  // Default: application/json
+  const body = (await req.json()) as { type?: string; content?: string; metadata?: Record<string, unknown> };
+  return {
+    content: body.content ?? '',
+    type: body.type ?? 'message',
+    metadata: body.metadata ?? {},
+    fileMetadata: null,
+    fileBuffer: null,
+  };
+}
 
 export async function POST(req: Request) {
   try {
-    const { content, type = 'message', metadata = {} } = await req.json();
+    const { content, type, metadata, fileMetadata } = await parseRequest(req);
 
     if (!content || typeof content !== 'string') {
       return NextResponse.json(
@@ -141,41 +194,47 @@ ${JSON.stringify(knowledgeEnrichment.matches.map((k) => ({ name: k.name, type: k
     const topMatches = await findSimilarDNA(currentTags);
     const topMatch = topMatches.length > 0 ? topMatches[0] : null;
 
-    // 7. Persist Scan & Audit Record in MongoDB
+    // 7. Persist Scan & Audit Record in MongoDB — generate ID upfront so it's
+    //    always available for the response even if DB write partially fails.
+    const scanId = new ObjectId();
+    const scanRecord = {
+      _id: scanId,
+      createdAt: new Date(),
+      type,
+      content: trimmed.length > 500 ? trimmed.substring(0, 500) + '...' : trimmed,
+      // field names expected by /investigate/[id] page
+      inputType: type,
+      inputMetadata: fileMetadata ?? { truncatedContent: trimmed.substring(0, 150) },
+      riskScore: finalDecision.finalRisk,
+      confidenceScore: finalDecision.finalConfidence,
+      classification: finalDecision.finalClassification,
+      recommendedAction: finalDecision.recommendedAction,
+      attackerIntent: finalDecision.attackerIntent,
+      explanation: finalDecision.explanation,
+      hardRuleTriggered: finalDecision.hardRuleTriggered,
+      analysisStatus,
+      dnaTags: currentTags,
+      threatDna: {
+        tags: currentTags,
+        topMatch: topMatch ? {
+          similarity: topMatch.overlapPercent / 100,
+          quality: topMatch.matchQuality,
+          threat_name: topMatch.previousIntent,
+        } : null,
+      },
+      evidence: finalDecision.evidence,
+      policiesApplied: finalDecision.policiesApplied,
+      metadata,
+    };
+
     try {
       const db = await getDb();
-      const scanRecord = {
-        createdAt: new Date(),
-        type,
-        content: trimmed.length > 500 ? trimmed.substring(0, 500) + '...' : trimmed,
-        risk_score: finalDecision.finalRisk,
-        classification: finalDecision.finalClassification,
-        recommended_action: finalDecision.recommendedAction,
-        threat_category: finalDecision.attackerIntent,
-        confidence: finalDecision.finalConfidence,
-        attackerIntent: finalDecision.attackerIntent,
-        explanation: finalDecision.explanation,
-        hardRuleTriggered: finalDecision.hardRuleTriggered,
-        dnaTags: currentTags,
-        threatDna: {
-          tags: currentTags,
-          topMatch: topMatch ? {
-            similarity: topMatch.overlapPercent / 100,
-            quality: topMatch.matchQuality,
-            threat_name: topMatch.previousIntent,
-          } : null,
-        },
-        evidence: finalDecision.evidence,
-        policiesApplied: finalDecision.policiesApplied,
-        metadata,
-      };
-
-      const inserted = await db.collection('scans').insertOne(scanRecord);
+      await db.collection('scans').insertOne(scanRecord);
 
       // Auto-escalate Dangerous/Critical items to Incidents
       if (finalDecision.finalRisk >= 60 || finalDecision.finalClassification === 'critical' || finalDecision.finalClassification === 'dangerous') {
         await db.collection('incidents').insertOne({
-          scanId: inserted.insertedId,
+          scanId,
           timestamp: new Date(),
           title: `${finalDecision.finalClassification.toUpperCase()} Threat Detected`,
           description: finalDecision.explanation,
@@ -196,7 +255,7 @@ ${JSON.stringify(knowledgeEnrichment.matches.map((k) => ({ name: k.name, type: k
             attackerIntent: finalDecision.attackerIntent,
             topEvidence: finalDecision.evidence.map((e) => e.title),
             recommendedAction: finalDecision.recommendedAction,
-            scanId: inserted.insertedId.toString(),
+            scanId: scanId.toString(),
           }).catch((err) => console.error('WhatsApp notification error:', err));
         }
       }
@@ -204,7 +263,9 @@ ${JSON.stringify(knowledgeEnrichment.matches.map((k) => ({ name: k.name, type: k
       console.warn('MongoDB persistence skipped in ephemeral/offline mode:', dbErr);
     }
 
+    // Always include `id` so InvestigateForm can redirect to /investigate/[id]
     return NextResponse.json({
+      id: scanId.toString(),
       risk_score: finalDecision.finalRisk,
       classification: finalDecision.finalClassification,
       recommended_action: finalDecision.recommendedAction,

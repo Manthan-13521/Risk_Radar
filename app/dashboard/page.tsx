@@ -61,7 +61,7 @@ export default async function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="text-[11px] font-extrabold uppercase tracking-[0.2em]" style={{ color: '#990011' }}>
-              ShieldSense · Personal Security Console
+              Risk_Radar · Personal Security Console
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight" style={{ color: '#111111' }}>
               Welcome back, {userName.split(' ')[0]}

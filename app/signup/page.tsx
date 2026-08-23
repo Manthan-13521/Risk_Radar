@@ -93,7 +93,7 @@ export default function SignupPage() {
             <RiskRadarLogo size={44} />
             <div>
               <span className="font-extrabold text-2xl tracking-tight" style={{ color: '#111111' }}>
-                SHIELDSENSE
+                Risk_Radar
               </span>
               <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#990011' }}>
                 AI Security Operations

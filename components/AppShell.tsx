@@ -180,10 +180,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     .toUpperCase() || 'SO';
 
   const getTitle = () => {
-    if (!pathname) return 'ShieldSense';
+    if (!pathname) return 'Risk_Radar';
     if (pathname.startsWith('/investigate/')) return 'Investigation Result';
     if (pathname.startsWith('/incidents/')) return 'Incident Detail';
-    return PAGE_TITLES[pathname] || 'ShieldSense';
+    return PAGE_TITLES[pathname] || 'Risk_Radar';
   };
 
   useEffect(() => {
@@ -286,7 +286,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <RiskRadarLogo size={32} />
             <div>
-              <div className="font-extrabold text-base tracking-tight" style={{ color: '#111111' }}>ShieldSense</div>
+              <div className="font-extrabold text-base tracking-tight" style={{ color: '#111111' }}>Risk_Radar</div>
               <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#554B49' }}>Digital Immune System</div>
             </div>
           </div>
@@ -347,7 +347,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3 min-w-0">
               <RiskRadarLogo size={32} className="shrink-0" />
               <div className="min-w-0">
-                <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>ShieldSense</div>
+                <div className="font-extrabold text-base tracking-tight truncate" style={{ color: '#111111' }}>Risk_Radar</div>
                 <div className="text-[10px] font-bold uppercase tracking-widest truncate" style={{ color: '#554B49' }}>Digital Immune System</div>
               </div>
             </div>
@@ -434,7 +434,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </button>
 
             <div>
-              <div className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#554B49' }}>ShieldSense</div>
+              <div className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#554B49' }}>Risk_Radar</div>
               <div className="text-base font-extrabold leading-tight" style={{ color: '#111111' }}>{getTitle()}</div>
             </div>
           </div>

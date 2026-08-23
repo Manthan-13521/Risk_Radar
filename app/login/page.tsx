@@ -86,7 +86,7 @@ function LoginForm() {
             <RiskRadarLogo size={44} />
             <div>
               <span className="font-extrabold text-2xl tracking-tight" style={{ color: '#111111' }}>
-                SHIELDSENSE
+                Risk_Radar
               </span>
               <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#990011' }}>
                 AI Security Operations
@@ -126,7 +126,7 @@ function LoginForm() {
                 Authentication
               </div>
               <h2 className="text-2xl font-extrabold" style={{ color: '#111111' }}>
-                Sign In to ShieldSense
+                Sign In to Risk_Radar
               </h2>
               <p className="text-xs font-medium mt-1" style={{ color: '#554B49' }}>
                 Enter your credentials to access your security console.
@@ -321,7 +321,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold" style={{ background: '#ECE6E2', color: '#111111' }}>Loading ShieldSense...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-bold" style={{ background: '#ECE6E2', color: '#111111' }}>Loading Risk_Radar...</div>}>
       <LoginForm />
     </Suspense>
   );

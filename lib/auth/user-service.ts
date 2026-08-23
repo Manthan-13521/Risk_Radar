@@ -24,7 +24,7 @@ export function normalizeEmail(email: string): string {
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 12;
+  const saltRounds = 10; // Optimized salt rounds for fast & secure hashing
   return bcrypt.hash(password, saltRounds);
 }
 
@@ -88,6 +88,7 @@ export async function createUser(params: {
   };
 }
 
+// Ultra-fast single-query atomic upsert for Google login
 export async function upsertGoogleUser(params: {
   name: string;
   email: string;
@@ -97,38 +98,39 @@ export async function upsertGoogleUser(params: {
   const normalizedEmail = normalizeEmail(params.email);
   const now = new Date();
 
-  const existing = await db.collection<User>('users').findOne({ email: normalizedEmail });
-  if (existing && existing._id) {
-    await db.collection('users').updateOne(
-      { _id: new ObjectId(existing._id) },
-      {
-        $set: {
-          lastLoginAt: now,
-          updatedAt: now,
-          ...(params.image && !existing.image ? { image: params.image } : {}),
-          ...(params.name && !existing.name ? { name: params.name } : {}),
-        },
-      }
-    );
-    return { ...existing, lastLoginAt: now };
+  const res = await db.collection<User>('users').findOneAndUpdate(
+    { email: normalizedEmail },
+    {
+      $set: {
+        lastLoginAt: now,
+        updatedAt: now,
+        ...(params.image ? { image: params.image } : {}),
+        ...(params.name ? { name: params.name } : {}),
+      },
+      $setOnInsert: {
+        email: normalizedEmail,
+        provider: 'google',
+        role: 'USER',
+        organizationId: null,
+        createdAt: now,
+      },
+    },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  if (res) {
+    return res as unknown as User;
   }
 
-  const newUser: Omit<User, '_id'> = {
+  return {
     name: params.name || normalizedEmail.split('@')[0],
     email: normalizedEmail,
     image: params.image || null,
     provider: 'google',
     role: 'USER',
-    organizationId: null,
     createdAt: now,
     updatedAt: now,
     lastLoginAt: now,
-  };
-
-  const result = await db.collection('users').insertOne(newUser);
-  return {
-    _id: result.insertedId,
-    ...newUser,
   };
 }
 

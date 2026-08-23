@@ -16,7 +16,7 @@ export default async function LandingPage() {
       <div className="space-y-6 pb-10 border-b" style={{ borderColor: '#C4B5B0' }}>
         <div className="space-y-3">
           <div className="text-[11px] font-extrabold uppercase tracking-[0.2em]" style={{ color: '#990011' }}>
-            ShieldSense · Digital Immune System
+            Risk_Radar · Digital Immune System
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-[66px] font-extrabold leading-[0.95] tracking-tight" style={{ color: '#111111' }}>
             INVESTIGATE<br />BEFORE YOU<br />INTERACT.
@@ -93,7 +93,7 @@ export default async function LandingPage() {
             Interactive Security Sandbox
           </div>
           <h2 className="text-xl font-extrabold" style={{ color: '#111111' }}>
-            TEST AN ARTIFACT WITH SHIELDSENSE
+            TEST AN ARTIFACT WITH RISK_RADAR
           </h2>
           <p className="text-sm mt-0.5" style={{ color: '#554B49' }}>
             Paste a suspicious URL, message, or email to preview real-time threat detection and behavioral analysis.
@@ -110,7 +110,7 @@ export default async function LandingPage() {
               Product Demo · 40 Seconds
             </div>
             <h2 className="text-2xl md:text-3xl font-extrabold leading-tight" style={{ color: '#111111' }}>
-              See ShieldSense in Action
+              See Risk_Radar in Action
             </h2>
             <p className="text-sm mt-1.5 max-w-lg font-medium" style={{ color: '#554B49' }}>
               One suspicious click. One investigation. One decision before it&apos;s too late.
@@ -120,7 +120,7 @@ export default async function LandingPage() {
             className="shrink-0 text-[10px] font-extrabold uppercase tracking-widest px-3.5 py-2 rounded-xl border self-start sm:self-auto"
             style={{ background: 'rgba(153,0,17,0.07)', borderColor: 'rgba(153,0,17,0.2)', color: '#990011' }}
           >
-            Watch how ShieldSense investigates a suspicious banking URL.
+            Watch how Risk_Radar investigates a suspicious banking URL.
           </div>
         </div>
 

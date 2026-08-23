@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
       : []),
     CredentialsProvider({
       id: 'credentials',
-      name: 'ShieldSense Credentials',
+      name: 'Risk_Radar Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
@@ -44,7 +44,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Please provide both email and password.');
         }
 
-        await ensureMongoIndexes();
+        // Lazy non-blocking index ensure
+        void ensureMongoIndexes().catch(() => {});
+
         const normalized = normalizeEmail(credentials.email);
         const user = await findUserByEmail(normalized);
 
@@ -62,7 +64,8 @@ export const authOptions: NextAuthOptions = {
         }
 
         const userId = user._id ? user._id.toString() : '';
-        await updateUserLastLogin(userId);
+        // Non-blocking lastLogin update
+        void updateUserLastLogin(userId).catch(() => {});
 
         return {
           id: userId,
@@ -76,7 +79,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }) {
-      await ensureMongoIndexes();
+      void ensureMongoIndexes().catch(() => {});
       if (account?.provider === 'google' && user.email) {
         try {
           const dbUser = await upsertGoogleUser({

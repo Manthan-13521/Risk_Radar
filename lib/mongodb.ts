@@ -1,6 +1,11 @@
 import { MongoClient, Db } from 'mongodb';
 
-const options = {};
+const options = {
+  maxPoolSize: 20,
+  minPoolSize: 2,
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 8000,
+};
 
 // Global caching for MongoClient promise across serverless / Next.js function invocations
 const globalWithMongo = global as typeof globalThis & {

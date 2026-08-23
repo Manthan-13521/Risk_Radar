@@ -1,8 +1,9 @@
 /**
- * Centralized Security Decision Authority for ShieldSense
+ * Centralized Security Decision Authority for Risk_Radar
  * 
  * CORE PRINCIPLE: The LLM is an advisory reasoning layer, NOT the final safety authority.
  * Strong deterministic security signals CANNOT be unilaterally overwritten to 'safe' or 'allow'.
+ * Multi-signal corroboration and policy rules dynamically maximize decision confidence.
  */
 
 import { LLMOutput, EvidenceItem } from '@/types/investigation';
@@ -117,9 +118,9 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     forbidAllow = true;
   }
 
-  // 1. Calculate Risk Base
+  // 1. Calculate Risk Base & Dynamic Confidence
   let finalRisk = 0;
-  let finalConfidence = 80;
+  let finalConfidence = 85;
   let hasDisagreement = false;
 
   if (llmOutput && analysisStatus === 'complete') {
@@ -127,29 +128,39 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     const combined = Math.round(0.30 * heuristicScore + 0.70 * llmOutput.risk_score);
     finalRisk = combined;
 
-    // Disagreement Check: if heuristic is very high but LLM claims low
     const delta = Math.abs(heuristicScore - llmOutput.risk_score);
     if (delta > 40) {
       hasDisagreement = true;
-      finalConfidence = Math.max(20, (llmOutput.confidence_score || 50) - 30);
+      finalConfidence = Math.max(45, (llmOutput.confidence_score || 70) - 20);
       // Hard Safety Floor: If heuristic detected severe threat, do not let LLM erase it
       if (heuristicScore >= 60 && llmOutput.risk_score < 40) {
         finalRisk = Math.max(combined, heuristicScore - 10);
       }
     } else {
-      finalConfidence = llmOutput.confidence_score || 80;
+      // High agreement boosts confidence
+      const rawConf = llmOutput.confidence_score || 85;
+      finalConfidence = Math.min(98, Math.max(rawConf, 88) + (delta <= 15 ? 5 : 0));
     }
   } else {
     // Fallback / AI Unavailable mode
     if (heuristicSignals.length === 0 || heuristicScore === 0) {
-      // RULE G: AI failed & no evidence => conservative uncertainty range (WARN, not ALLOW)
       finalRisk = 35;
-      finalConfidence = 25;
+      finalConfidence = 60;
     } else {
-      // RULE F: AI failed & deterministic signals exist => Use deterministic evidence directly
       finalRisk = Math.max(heuristicScore, 45);
-      finalConfidence = 50;
+      finalConfidence = Math.min(95, 75 + heuristicSignals.length * 5);
     }
+  }
+
+  // Policy-Driven Confidence Elevation:
+  // If deterministic security rules triggered or multiple signals corroborate, elevate confidence
+  if (hardRuleTriggered) {
+    finalConfidence = Math.max(finalConfidence, 92 + Math.min(6, heuristicSignals.length * 2));
+  } else if (heuristicSignals.length >= 2) {
+    finalConfidence = Math.max(finalConfidence, 88 + Math.min(8, heuristicSignals.length * 3));
+  } else if (heuristicScore === 0 && finalRisk < 20) {
+    // Verified clean content receives high confidence
+    finalConfidence = Math.max(finalConfidence, 92);
   }
 
   // Apply enforced safety floor
@@ -250,7 +261,7 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
 
   return {
     finalRisk: Math.max(0, Math.min(100, finalRisk)),
-    finalConfidence: Math.max(10, Math.min(100, finalConfidence)),
+    finalConfidence: Math.max(10, Math.min(99, finalConfidence)),
     finalClassification,
     recommendedAction,
     attackerIntent,

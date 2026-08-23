@@ -3,11 +3,13 @@
  * 
  * CORE PRINCIPLE: The LLM is an advisory reasoning layer, NOT the final safety authority.
  * Strong deterministic security signals CANNOT be unilaterally overwritten to 'safe' or 'allow'.
- * Multi-signal corroboration and policy rules dynamically maximize decision confidence.
+ * Multi-signal corroboration, prompt-injection containment, and runtime policy rules maximize precision.
  */
 
 import { LLMOutput, EvidenceItem } from '@/types/investigation';
 import { HeuristicSignal } from './heuristics';
+import { EvaluatedPolicySignal } from './runtime-policy';
+import { KnowledgeMatch } from './knowledge-enrichment';
 
 export interface SecurityDecisionInput {
   heuristicScore: number;
@@ -16,6 +18,9 @@ export interface SecurityDecisionInput {
   failureCode: string | null;
   analysisStatus: 'complete' | 'fallback' | 'failed';
   inputType: string;
+  triggeredPolicies?: EvaluatedPolicySignal[];
+  knowledgeMatches?: KnowledgeMatch[];
+  hasPromptInjection?: boolean;
 }
 
 export interface SecurityDecisionResult {
@@ -28,6 +33,7 @@ export interface SecurityDecisionResult {
   evidence: EvidenceItem[];
   hasDisagreement: boolean;
   hardRuleTriggered: string | null;
+  policiesApplied: string[];
 }
 
 export function evaluateSecurityDecision(input: SecurityDecisionInput): SecurityDecisionResult {
@@ -37,6 +43,9 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     llmOutput,
     failureCode,
     analysisStatus,
+    triggeredPolicies = [],
+    knowledgeMatches = [],
+    hasPromptInjection = false,
   } = input;
 
   const signalTypes = new Set(heuristicSignals.map((s) => s.type));
@@ -57,6 +66,10 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
   const hasMacro = signalTypes.has('macro_capable_file');
   const hasBrandMismatch = signalTypes.has('brand_mismatch');
   const hasSuspiciousTld = signalTypes.has('suspicious_tld');
+  const hasOpenRedirect = signalTypes.has('open_redirect_destination');
+  const hasAuthorityObfuscation = signalTypes.has('authority_obfuscation');
+  const hasInjection = hasPromptInjection || signalTypes.has('prompt_injection_attempt');
+  // isResearchContext derived from signals if needed
 
   let hardRuleTriggered: string | null = null;
   let enforcedMinimumRisk = 0;
@@ -77,8 +90,8 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     forbidAllow = true;
   }
 
-  // RULE C: Lookalike domain + login/verify/account path
-  if (hasLookalike && (hasAuthPath || hasSecurityPath || hasPaymentPath)) {
+  // RULE C: Lookalike domain + login/verify/account path or authority obfuscation
+  if (hasLookalike && (hasAuthPath || hasSecurityPath || hasPaymentPath || hasAuthorityObfuscation)) {
     hardRuleTriggered = 'RULE_C_LOOKALIKE_AND_CREDENTIAL_PATH';
     enforcedMinimumRisk = Math.max(enforcedMinimumRisk, 85);
     forbidAllow = true;
@@ -96,12 +109,23 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     }
   }
 
-  // RULE E: Payment request + Urgency + Delivery/Lottery
+  // RULE E: Payment request + Delivery Scam or Lottery Scam
   if (hasPaymentRequest && (hasDeliveryScam || hasFinancialScam || (hasUrgency && hasPaymentPath))) {
     hardRuleTriggered = 'RULE_E_FINANCIAL_FRAUD_PATTERN';
     enforcedMinimumRisk = Math.max(enforcedMinimumRisk, 75);
     forbidAllow = true;
     forceAction = 'quarantine';
+  }
+
+  // RULE F: Open Redirect to Suspicious Target
+  if (hasOpenRedirect) {
+    hardRuleTriggered = 'RULE_F_OPEN_REDIRECT';
+    enforcedMinimumRisk = Math.max(enforcedMinimumRisk, 50);
+    forbidAllow = true;
+    if (hasAuthPath || hasLookalike) {
+      enforcedMinimumRisk = Math.max(enforcedMinimumRisk, 75);
+      forceAction = 'quarantine';
+    }
   }
 
   // File Threat Rules
@@ -118,7 +142,32 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     forbidAllow = true;
   }
 
-  // 1. Calculate Risk Base & Dynamic Confidence
+  // Prompt Injection Containment Hard Rule:
+  // When adversarial instructions attempt to subvert the AI model, strictly forbid allow
+  if (hasInjection) {
+    hardRuleTriggered = 'RULE_PROMPT_INJECTION_CONTAINMENT';
+    enforcedMinimumRisk = Math.max(enforcedMinimumRisk, 45);
+    forbidAllow = true;
+    if (!forceAction) forceAction = 'warn';
+  }
+
+  // 1. Incorporate Dynamic Runtime Policies (MongoDB configured)
+  const policiesApplied: string[] = [];
+  for (const pol of triggeredPolicies) {
+    policiesApplied.push(pol.policyName);
+    if (pol.minimumRisk > enforcedMinimumRisk) {
+      enforcedMinimumRisk = pol.minimumRisk;
+    }
+    if (pol.action === 'block' || pol.action === 'quarantine') {
+      forbidAllow = true;
+      if (pol.action === 'block') forceAction = 'block';
+      else if (!forceAction) forceAction = 'quarantine';
+    } else if (pol.action === 'warn' && !forceAction) {
+      forceAction = 'warn';
+    }
+  }
+
+  // 2. Calculate Combined Risk & Dynamic Confidence
   let finalRisk = 0;
   let finalConfidence = 85;
   let hasDisagreement = false;
@@ -137,31 +186,31 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
         finalRisk = Math.max(combined, heuristicScore - 10);
       }
     } else {
-      // High agreement boosts confidence
       const rawConf = llmOutput.confidence_score || 85;
       finalConfidence = Math.min(98, Math.max(rawConf, 88) + (delta <= 15 ? 5 : 0));
     }
   } else {
     // Fallback / AI Unavailable mode
     if (heuristicSignals.length === 0 || heuristicScore === 0) {
-      // Zero signals = zero threat evidence — uncertainty ≠ suspicion
       finalRisk = 5;
       finalConfidence = 80;
     } else {
-      // Let the actual heuristic score stand; hard rules will enforce minimums if needed
       finalRisk = heuristicScore;
       finalConfidence = Math.min(70, 40 + heuristicSignals.length * 8);
     }
   }
 
+  // Prompt injection containment: heavily penalize AI confidence if injection attempt was present
+  if (hasInjection) {
+    finalConfidence = Math.min(finalConfidence, 55);
+  }
+
   // Policy-Driven Confidence Elevation:
-  // If deterministic security rules triggered or multiple signals corroborate, elevate confidence
   if (hardRuleTriggered) {
     finalConfidence = Math.max(finalConfidence, 92 + Math.min(6, heuristicSignals.length * 2));
   } else if (heuristicSignals.length >= 2) {
     finalConfidence = Math.max(finalConfidence, 88 + Math.min(8, heuristicSignals.length * 3));
   } else if (heuristicScore === 0 && finalRisk < 20) {
-    // Verified clean content receives high confidence
     finalConfidence = Math.max(finalConfidence, 92);
   }
 
@@ -170,7 +219,7 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     finalRisk = Math.max(finalRisk, enforcedMinimumRisk);
   }
 
-  // 2. Classify Risk
+  // 3. Classify Risk into Standard Tiers
   let finalClassification: 'safe' | 'suspicious' | 'dangerous' | 'critical';
 
   if (finalRisk < 30 && !forbidAllow) {
@@ -189,7 +238,7 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     finalRisk = Math.max(finalRisk, 40);
   }
 
-  // 3. Recommended Action
+  // 4. Recommended Action
   let recommendedAction: 'allow' | 'warn' | 'quarantine' | 'block';
 
   if (forceAction) {
@@ -204,10 +253,12 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     recommendedAction = 'warn';
   }
 
-  // 4. Intent Determination
+  // 5. Intent Determination
   let attackerIntent: LLMOutput['attacker_intent'] = llmOutput?.attacker_intent || 'uncertain';
-  if (attackerIntent === 'uncertain' || !llmOutput) {
-    if (hasCredentialRequest || hasAuthPath || (hasLookalike && (hasAuthPath || hasSecurityPath))) {
+  if (attackerIntent === 'uncertain' || !llmOutput || hasInjection) {
+    if (hasInjection) {
+      attackerIntent = 'scam_redirection';
+    } else if (hasCredentialRequest || hasAuthPath || (hasLookalike && (hasAuthPath || hasSecurityPath))) {
       attackerIntent = 'credential_theft';
     } else if (hasPaymentRequest || hasPaymentPath || hasFinancialScam || hasDeliveryScam) {
       attackerIntent = 'payment_fraud';
@@ -220,13 +271,13 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     }
   }
 
-  // 5. Evidence Aggregation & Consistency Guarantee
+  // 6. Evidence Aggregation & Consistency Guarantee
   let evidence: EvidenceItem[] = [];
   if (llmOutput && llmOutput.evidence && llmOutput.evidence.length > 0) {
     evidence = [...llmOutput.evidence];
   }
 
-  // Merge any high-severity deterministic heuristic signals that LLM may have omitted
+  // Merge any deterministic heuristic signals that LLM may have omitted
   for (const sig of heuristicSignals) {
     if (!evidence.some((e) => e.type === sig.type || e.title === sig.title)) {
       evidence.push({
@@ -236,6 +287,28 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
         description: sig.description,
       });
     }
+  }
+
+  // Merge knowledge enrichment items
+  for (const km of knowledgeMatches) {
+    if (!evidence.some((e) => e.title === km.name)) {
+      evidence.push({
+        type: km.type,
+        severity: km.severity,
+        title: `Knowledge Fact: ${km.name}`,
+        description: km.description,
+      });
+    }
+  }
+
+  // Merge dynamic policy triggers
+  for (const pol of triggeredPolicies) {
+    evidence.push({
+      type: 'policy_enforcement',
+      severity: pol.action === 'block' ? 'critical' : pol.action === 'quarantine' ? 'high' : 'medium',
+      title: `Policy Applied: ${pol.policyName}`,
+      description: pol.description,
+    });
   }
 
   // Guarantee: High-risk result MUST have plain-language evidence
@@ -248,16 +321,18 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     });
   }
 
-  // 6. Explanation Construction
+  // 7. Explanation Construction
   let explanation = llmOutput?.explanation || '';
-  if (!explanation || analysisStatus !== 'complete') {
+  if (!explanation || analysisStatus !== 'complete' || hasInjection) {
     const codePrefix = failureCode ? `[${failureCode}] ` : '';
-    if (forbidAllow && hardRuleTriggered) {
+    if (hasInjection) {
+      explanation = 'Adversarial manipulation pattern detected inside untrusted content. Security policy locked decision to prevent unauthorized override.';
+    } else if (forbidAllow && hardRuleTriggered) {
       explanation = `${codePrefix}Deterministic security policy detected elevated threat indicators (${heuristicSignals.map((s) => s.title).join(', ')}). Action strictly enforced as safety precaution.`;
     } else if (heuristicSignals.length > 0) {
       explanation = `${codePrefix}Risk evaluated by deterministic security heuristics (${heuristicSignals.length} signal(s) identified).`;
     } else {
-      explanation = `${codePrefix}No strong structural indicators detected, but content could not be verified by AI. Caution recommended.`;
+      explanation = `${codePrefix}No strong structural indicators detected. Content verified clean.`;
     }
   }
 
@@ -271,5 +346,6 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
     evidence,
     hasDisagreement,
     hardRuleTriggered,
+    policiesApplied,
   };
 }

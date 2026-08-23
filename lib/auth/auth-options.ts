@@ -11,13 +11,13 @@ import {
 } from './user-service';
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'shieldsense-production-secret-auth-key-2025',
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'risk-radar-production-secret-auth-key-2025',
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   jwt: {
-    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'shieldsense-production-secret-auth-key-2025',
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'risk-radar-production-secret-auth-key-2025',
   },
   pages: {
     signIn: '/login',

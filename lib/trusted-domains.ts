@@ -1,10 +1,10 @@
 /**
- * Structured Trusted Domain & Search Engine Knowledge Base for Risk_Radar
+ * Structured Trusted Domain, Security Research & Search Engine Knowledge Base for Risk_Radar
  * 
  * CORE PRINCIPLE:
  * - A trusted domain is a POSITIVE SIGNAL when the URL structure is benign.
- * - It does NOT grant an unconditional whitelist (subdomain spoofing & malicious paths are still analyzed).
- * - Legitimate search engine query parameters (e.g. ?q=threat+intelligence) are user input, not domain threats.
+ * - It does NOT grant an unconditional whitelist (subdomain spoofing, open redirects & malicious paths are still analyzed).
+ * - Legitimate search engine & security documentation query parameters are user input, not domain threats.
  */
 
 const TRUSTED_DOMAINS = new Set([
@@ -17,14 +17,27 @@ const TRUSTED_DOMAINS = new Set([
   'office.com',
   'bing.com',
   'github.com',
+  'github.io',
   'apple.com',
   'icloud.com',
   'amazon.com',
+  'aws.amazon.com',
   'paypal.com',
   'wikipedia.org',
+  'wikimedia.org',
   'openai.com',
   'duckduckgo.com',
   'yahoo.com',
+  'csrc.nist.gov',
+  'nist.gov',
+  'owasp.org',
+  'cisa.gov',
+  'mitre.org',
+  'attack.mitre.org',
+  'krebsonsecurity.com',
+  'virustotal.com',
+  'cloudflare.com',
+  'mozilla.org',
   'example.com',
   'example.org',
   'example.net',
@@ -44,6 +57,8 @@ const SEARCH_ENGINE_HOSTS = new Set([
   'www.ecosia.org',
   'baidu.com',
   'www.baidu.com',
+  'github.com',
+  'www.github.com',
 ]);
 
 /**
@@ -65,7 +80,7 @@ export function isTrustedDomain(hostname: string): boolean {
 }
 
 /**
- * Recognizes legitimate search engine query URLs.
+ * Recognizes legitimate search engine query URLs & repository searches.
  * Example: https://www.google.com/search?q=cybersecurity+threat+intelligence
  */
 export function isSearchEngineUrl(parsedUrl: URL): boolean {
@@ -82,7 +97,7 @@ export function isSearchEngineUrl(parsedUrl: URL): boolean {
 
 /**
  * Score modifier for trusted domains.
- * Provides a strong -30 point risk reduction when domain is trusted and path is non-malicious.
+ * Provides a -30 point risk reduction when domain is trusted and path is non-malicious.
  */
 export function getTrustedDomainScore(hostname: string): number {
   return isTrustedDomain(hostname) ? -30 : 0;

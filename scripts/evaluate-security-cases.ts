@@ -16,7 +16,7 @@ interface TestCase {
 
 function runEvaluation() {
   console.log('============================================================');
-  console.log(' SHIELDSENSE — HACKATHON REGRESSION EVALUATION');
+  console.log(' RISK RADAR — HACKATHON REGRESSION EVALUATION');
   console.log(' Deterministic Heuristic & Policy Calibration Benchmark');
   console.log('============================================================\n');
 

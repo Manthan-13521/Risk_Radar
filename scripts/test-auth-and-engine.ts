@@ -52,16 +52,16 @@ function assert(condition: boolean, testName: string, detail?: string) {
 
 async function runTests() {
   console.log('================================================================');
-  console.log('SHIELDSENSE — COMPREHENSIVE AUTHENTICATION & ENGINE TEST SUITE');
+  console.log('RISK RADAR — COMPREHENSIVE AUTHENTICATION & ENGINE TEST SUITE');
   console.log('================================================================\n');
 
   const db = await getDb();
   await ensureMongoIndexes();
 
   const timestamp = Date.now();
-  const emailA = `test_user_a_${timestamp}@shieldsense.internal`;
-  const emailB = `test_user_b_${timestamp}@shieldsense.internal`;
-  const emailAdmin = `test_admin_${timestamp}@shieldsense.internal`;
+  const emailA = `test_user_a_${timestamp}@risk-radar.internal`;
+  const emailB = `test_user_b_${timestamp}@risk-radar.internal`;
+  const emailAdmin = `test_admin_${timestamp}@risk-radar.internal`;
   const passwordA = 'SecurePassword123!';
   const passwordB = 'AnotherSecurePass456!';
 

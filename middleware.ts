@@ -38,7 +38,7 @@ export default withAuth(
     pages: {
       signIn: '/login',
     },
-    secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'shieldsense-production-secret-auth-key-2025',
+    secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'risk-radar-production-secret-auth-key-2025',
   }
 );
 

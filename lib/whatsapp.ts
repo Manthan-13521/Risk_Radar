@@ -45,7 +45,7 @@ function buildAlertText(payload: WhatsAppAlertPayload): string {
     : '🟡 SUSPICIOUS';
 
   return [
-    `🚨 *Risk Detected — ShieldSense Alert*`,
+    `🚨 *Risk Detected — Risk Radar Alert*`,
     ``,
     `${severityLabel}`,
     `*Risk Score:* ${payload.riskScore}/100`,
@@ -56,7 +56,7 @@ function buildAlertText(payload: WhatsAppAlertPayload): string {
     ``,
     `⚠️ *Action Required:* ${advice}`,
     ``,
-    `_ShieldSense AI Security Firewall — hackathon prototype_`,
+    `_Risk Radar AI Security Firewall — hackathon prototype_`,
   ].join('\n');
 }
 

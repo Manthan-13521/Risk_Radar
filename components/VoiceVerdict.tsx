@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface VoiceVerdictProps {
   investigationId: string;
@@ -18,9 +18,8 @@ export default function VoiceVerdict({
 }: VoiceVerdictProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
-  const [supported] = useState(() =>
-    typeof window !== 'undefined' && 'speechSynthesis' in window
-  );
+  const [supported, setSupported] = useState(false);
+  const autoPlayedRef = useRef(false);
 
   const isRisk =
     riskScore >= 30 ||
@@ -33,48 +32,67 @@ export default function VoiceVerdict({
   const script =
     voiceText ||
     (isRisk
-      ? `Risk detected. Score is ${riskScore} out of 100. Access restricted. Do not continue.`
-      : `Verified safe. Score is ${riskScore} out of 100. Access allowed.`);
+      ? `Threat detected. Risk score is ${riskScore} out of 100. Access restricted. Do not continue.`
+      : `Verified clean. Risk score is ${riskScore} out of 100. Access allowed.`);
 
-  // Direct user-gesture handler — called only from onClick, never from useEffect
-  const handlePlay = () => {
-    if (!window.speechSynthesis) return;
+  const playSpeech = useCallback(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    // Kill any running speech first
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
 
-    const utter = new SpeechSynthesisUtterance(script);
-    utter.rate = 1.0;
-    utter.pitch = isRisk ? 1.1 : 0.95;
-    utter.volume = 1;
+      const utter = new SpeechSynthesisUtterance(script);
+      utter.rate = 1.0;
+      utter.pitch = isRisk ? 1.05 : 0.95;
+      utter.volume = 1;
 
-    // Pick best English voice available
-    const voices = window.speechSynthesis.getVoices();
-    const preferred =
-      voices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.includes('Natural') ||
-            v.name.includes('Google') ||
-            v.name.includes('Samantha') ||
-            v.name.includes('Daniel') ||
-            v.name.includes('Karen') ||
-            v.name.includes('Alex'))
-      ) || voices.find((v) => v.lang.startsWith('en'));
-    if (preferred) utter.voice = preferred;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred =
+        voices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.includes('Natural') ||
+              v.name.includes('Google') ||
+              v.name.includes('Samantha') ||
+              v.name.includes('Daniel') ||
+              v.name.includes('Karen') ||
+              v.name.includes('Alex'))
+        ) || voices.find((v) => v.lang.startsWith('en'));
+      if (preferred) utter.voice = preferred;
 
-    utter.onstart = () => {
-      setIsSpeaking(true);
-      setHasPlayed(true);
-    };
-    utter.onend = () => setIsSpeaking(false);
-    utter.onerror = () => setIsSpeaking(false);
+      utter.onstart = () => {
+        setIsSpeaking(true);
+        setHasPlayed(true);
+      };
+      utter.onend = () => setIsSpeaking(false);
+      utter.onerror = () => setIsSpeaking(false);
 
-    window.speechSynthesis.speak(utter);
-  };
+      window.speechSynthesis.speak(utter);
+    } catch (e) {
+      console.warn('[VoiceVerdict] Autoplay blocked or failed:', e);
+      setIsSpeaking(false);
+    }
+  }, [script, isRisk]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      setSupported(true);
+
+      // Trigger automatic audio briefing upon detection
+      if (!autoPlayedRef.current) {
+        autoPlayedRef.current = true;
+        const timer = setTimeout(() => {
+          playSpeech();
+        }, 400);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [playSpeech]);
 
   const handleStop = () => {
-    window.speechSynthesis?.cancel();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     setIsSpeaking(false);
   };
 
@@ -82,7 +100,7 @@ export default function VoiceVerdict({
 
   return (
     <div
-      className="rounded-2xl border p-5 shadow-sm"
+      className="rounded-2xl border p-5 shadow-sm transition-all"
       style={{
         background: isRisk ? 'rgba(153,0,17,0.06)' : 'rgba(23,107,82,0.06)',
         borderColor: isRisk ? 'rgba(153,0,17,0.3)' : 'rgba(23,107,82,0.3)',
@@ -93,7 +111,6 @@ export default function VoiceVerdict({
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         {/* Left — icon + text */}
         <div className="flex items-center gap-3.5 min-w-0">
-          {/* Speaker / equalizer icon */}
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border shadow-xs transition-all"
             style={{
@@ -140,7 +157,7 @@ export default function VoiceVerdict({
               className="text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-2"
               style={{ color: accentColor }}
             >
-              Voice Verdict
+              Automatic Voice Briefing
               {isSpeaking && (
                 <span
                   className="w-2 h-2 rounded-full inline-block"
@@ -159,10 +176,10 @@ export default function VoiceVerdict({
             </div>
             <div className="text-[10px] mt-0.5" style={{ color: '#554B49' }}>
               {isSpeaking
-                ? 'Speaking now…'
+                ? 'Speaking automatically…'
                 : hasPlayed
-                ? 'Click Replay to hear again'
-                : 'Click Play to hear the verdict read aloud'}
+                ? 'Click Replay to hear briefing again'
+                : 'Click Play to hear briefing'}
             </div>
           </div>
         </div>
@@ -179,33 +196,24 @@ export default function VoiceVerdict({
                 color: '#111111',
               }}
             >
-              ⏹&nbsp;Stop
+              ⏹&nbsp;Stop Audio
             </button>
           ) : (
             <button
-              onClick={handlePlay}
+              onClick={playSpeech}
               className="px-5 py-3 rounded-xl text-sm font-extrabold text-white shadow-md flex items-center gap-2 transition hover:opacity-90"
               style={{
                 background: accentColor,
-                // Pulse animation only before first play to draw attention
-                animation: !hasPlayed
-                  ? 'verdictPulse 2s ease-in-out infinite'
-                  : 'none',
               }}
             >
               <span style={{ fontSize: '16px' }}>▶</span>
-              <span>{hasPlayed ? 'Replay' : 'Play Voice Verdict'}</span>
+              <span>{hasPlayed ? 'Replay Audio' : 'Play Briefing'}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Keyframes injected inline */}
       <style>{`
-        @keyframes verdictPulse {
-          0%, 100% { box-shadow: 0 0 0 0 ${isRisk ? 'rgba(153,0,17,0.5)' : 'rgba(23,107,82,0.5)'}; }
-          50% { box-shadow: 0 0 0 8px ${isRisk ? 'rgba(153,0,17,0)' : 'rgba(23,107,82,0)'}; }
-        }
         @keyframes barBounce {
           0%, 100% { transform: scaleY(1); }
           50% { transform: scaleY(1.6); }

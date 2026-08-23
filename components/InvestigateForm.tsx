@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 const STEPS = [
   '01  SIGNAL EXTRACTION',
@@ -34,7 +34,6 @@ export default function InvestigateForm({
   showDemos?: boolean;
   onScanStateChange?: (stage: number) => void;
 }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
@@ -63,7 +62,7 @@ export default function InvestigateForm({
         if (onScanStateChange) onScanStateChange(next);
         return next;
       });
-    }, 450);
+    }, 400);
     return () => clearInterval(interval);
   }, [loading, onScanStateChange]);
 
@@ -76,23 +75,53 @@ export default function InvestigateForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleInvestigation = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (loading) return;
-    if (inputType === 'message' && !content.trim()) return;
-    if (inputType === 'file' && !fileName) return;
+
+    const trimmed = content.trim();
+    if (inputType === 'message' && !trimmed) {
+      setError('Please enter a URL or message to investigate.');
+      return;
+    }
+    if (inputType === 'file' && !fileInputRef.current?.files?.[0] && !fileName) {
+      setError('Please select a file to investigate.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setLoadingStep(1);
-    const formData = new FormData(e.currentTarget);
+
     try {
-      const res = await fetch('/api/investigate', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(await res.text() || 'Investigation failed');
+      const fd = new FormData();
+      fd.append('type', inputType);
+      if (inputType === 'message') {
+        fd.append('content', trimmed);
+      } else if (fileInputRef.current?.files?.[0]) {
+        fd.append('file', fileInputRef.current.files[0]);
+      }
+
+      const res = await fetch('/api/investigate', {
+        method: 'POST',
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Investigation request failed');
+      }
+
       const data = await res.json();
-      router.push(`/investigate/${data.id}`);
+      if (!data?.id) {
+        throw new Error('Invalid investigation response from server');
+      }
+
+      // Immediate guaranteed navigation
+      window.location.href = `/investigate/${data.id}`;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      console.error('[Investigate] Execution error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during investigation');
       setLoading(false);
       setLoadingStep(0);
     }
@@ -102,7 +131,7 @@ export default function InvestigateForm({
 
   if (compact) {
     return (
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleInvestigation} className="space-y-3">
         {error && (
           <div className="p-2.5 rounded-xl text-xs font-bold" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
             {error}
@@ -110,7 +139,9 @@ export default function InvestigateForm({
         )}
         <div className="flex gap-2">
           <input
-            name="content" value={content} onChange={e => setContent(e.target.value)}
+            name="content"
+            value={content}
+            onChange={e => setContent(e.target.value)}
             placeholder="Paste suspicious URL, message or address..."
             disabled={loading}
             className="flex-1 px-4 py-3.5 rounded-xl text-sm font-sans font-medium"
@@ -118,8 +149,9 @@ export default function InvestigateForm({
           />
           <input type="hidden" name="type" value="message" />
           <button
-            type="submit" disabled={disabled}
-            className="px-6 py-3.5 rounded-xl text-sm font-extrabold text-white shrink-0 transition hover:opacity-90 shadow-sm"
+            type="submit"
+            disabled={disabled}
+            className="px-6 py-3.5 rounded-xl text-sm font-extrabold text-white shrink-0 transition hover:opacity-90 shadow-sm disabled:cursor-not-allowed"
             style={{ background: disabled ? '#C4B5B0' : '#990011', color: disabled ? '#554B49' : '#fff' }}
           >
             {loading ? 'Scanning...' : 'Investigate →'}
@@ -135,7 +167,7 @@ export default function InvestigateForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleInvestigation} className="space-y-5">
       {error && (
         <div className="p-3.5 rounded-xl text-xs font-bold" style={{ background: 'rgba(153,0,17,0.08)', border: '1px solid rgba(153,0,17,0.2)', color: '#990011' }}>
           {error}
@@ -214,7 +246,10 @@ export default function InvestigateForm({
           style={{ borderColor: '#C4B5B0', background: '#ECE6E2' }}
         >
           <input
-            ref={fileInputRef} type="file" name="file" className="hidden"
+            ref={fileInputRef}
+            type="file"
+            name="file"
+            className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) setFileName(f.name); }}
           />
           <div className="text-3xl mb-3" style={{ color: '#990011' }}>↑</div>
@@ -248,7 +283,8 @@ export default function InvestigateForm({
       )}
 
       <button
-        type="submit" disabled={disabled}
+        type="submit"
+        disabled={disabled}
         className="w-full py-4 rounded-xl text-sm font-extrabold tracking-widest uppercase transition hover:opacity-90 shadow-md disabled:cursor-not-allowed"
         style={{
           background: disabled ? '#C4B5B0' : '#990011',

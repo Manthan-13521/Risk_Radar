@@ -113,16 +113,19 @@ export function buildFallbackOutput(
   const codeMsg = failureCode ? `[${failureCode}] ` : '';
 
   if (signals.length === 0 || heuristicScore === 0) {
-    // No heuristic evidence found, but AI failed — conservative uncertainty range
-    fallbackRisk = 35;
-    confidence = 20;
-    classification = 'suspicious';
-    explanation = `${codeMsg}AI verification was unavailable. Local heuristics found no strong malicious indicators, but content could not be verified. Exercise caution.`;
+    // No heuristic evidence found — zero signals means no threat evidence was detected.
+    // Uncertainty is NOT evidence of malice. Do NOT inflate risk when nothing was found.
+    // A clean URL (e.g. google.com/search?q=cybersecurity+threat+intelligence) with no
+    // structural anomalies should yield LOW RISK / ALLOW even when AI is unavailable.
+    fallbackRisk = 5;
+    confidence = 75;
+    classification = 'safe';
+    explanation = `${codeMsg}No structural or behavioral threat indicators detected. Local heuristic analysis found no evidence of malicious intent. AI verification was unavailable but is not required to establish safety when no signals are present.`;
   } else {
-    // Meaningful heuristic signals exist
-    fallbackRisk = Math.max(heuristicScore, 40);
-    confidence = 45;
-    classification = fallbackRisk >= 80 ? 'critical' : fallbackRisk >= 60 ? 'dangerous' : 'suspicious';
+    // Meaningful heuristic signals exist — score reflects actual signal weight
+    fallbackRisk = heuristicScore;
+    confidence = Math.min(70, 40 + signals.length * 8);
+    classification = fallbackRisk >= 80 ? 'critical' : fallbackRisk >= 60 ? 'dangerous' : fallbackRisk >= 30 ? 'suspicious' : 'safe';
     explanation = `${codeMsg}AI reasoning was unavailable. Risk evaluated using deterministic local security heuristics (${signals.length} threat signal(s) detected).`;
 
     // Infer intent from heuristics

@@ -5,14 +5,41 @@ const path = require('path');
 
 const TRUSTED_DOMAINS = new Set([
   'google.com',
-  'github.com',
-  'openai.com',
+  'googleusercontent.com',
+  'gstatic.com',
+  'youtube.com',
   'microsoft.com',
+  'live.com',
+  'office.com',
+  'bing.com',
+  'github.com',
   'apple.com',
+  'icloud.com',
+  'amazon.com',
+  'paypal.com',
   'wikipedia.org',
+  'openai.com',
+  'duckduckgo.com',
+  'yahoo.com',
   'example.com',
   'example.org',
   'example.net',
+]);
+
+const SEARCH_ENGINE_HOSTS = new Set([
+  'google.com',
+  'www.google.com',
+  'bing.com',
+  'www.bing.com',
+  'duckduckgo.com',
+  'www.duckduckgo.com',
+  'search.yahoo.com',
+  'yahoo.com',
+  'www.yahoo.com',
+  'ecosia.org',
+  'www.ecosia.org',
+  'baidu.com',
+  'www.baidu.com',
 ]);
 
 function isTrustedDomain(hostname) {
@@ -24,6 +51,18 @@ function isTrustedDomain(hostname) {
     if (cleanHost.endsWith('.' + list[i])) return true;
   }
   return false;
+}
+
+function isSearchEngineUrl(parsedUrl) {
+  const host = parsedUrl.hostname.toLowerCase().trim();
+  const isSearchHost = SEARCH_ENGINE_HOSTS.has(host) ||
+    Array.from(SEARCH_ENGINE_HOSTS).some(sh => host === sh || host.endsWith('.' + sh));
+  if (!isSearchHost) return false;
+  const path = parsedUrl.pathname.toLowerCase();
+  const isSearchPath = path === '/search' || path === '/' || path === '/web' || path === '/s';
+  const hasSearchParam = parsedUrl.searchParams.has('q') || parsedUrl.searchParams.has('p') ||
+    parsedUrl.searchParams.has('query') || parsedUrl.searchParams.has('wd');
+  return isSearchPath && hasSearchParam;
 }
 
 const KNOWN_BRANDS = [
@@ -66,11 +105,15 @@ function extractUrlFeatures(rawUrl) {
     const suspiciousTld = SUSPICIOUS_TLDS.some((tld) => hostname.endsWith(tld));
 
     const pathStr = parsed.pathname.toLowerCase();
-    const loginPath = pathStr.includes('login') || pathStr.includes('signin') || pathStr.includes('sign-in') || pathStr.includes('auth');
-    const verifyPath = pathStr.includes('verify') || pathStr.includes('verification') || pathStr.includes('kyc');
-    const accountPath = pathStr.includes('account') || pathStr.includes('profile') || pathStr.includes('recovery') || pathStr.includes('update');
-    const securityPath = pathStr.includes('security') || pathStr.includes('secure') || pathStr.includes('authenticate');
-    const paymentPath = pathStr.includes('payment') || pathStr.includes('pay') || pathStr.includes('checkout') || pathStr.includes('invoice') || pathStr.includes('confirm');
+    const trusted = isTrustedDomain(hostname);
+    const isSearchEngine = isSearchEngineUrl(parsed);
+
+    // Suppress path-based signals for legitimate search engine URLs (path = /search, user content in ?q=...)
+    const loginPath = !isSearchEngine && (pathStr.includes('login') || pathStr.includes('signin') || pathStr.includes('sign-in') || pathStr.includes('auth'));
+    const verifyPath = !isSearchEngine && (pathStr.includes('verify') || pathStr.includes('verification') || pathStr.includes('kyc'));
+    const accountPath = !isSearchEngine && (pathStr.includes('account') || pathStr.includes('profile') || pathStr.includes('recovery') || pathStr.includes('update'));
+    const securityPath = !isSearchEngine && (pathStr.includes('security') || pathStr.includes('secure') || pathStr.includes('authenticate'));
+    const paymentPath = !isSearchEngine && (pathStr.includes('payment') || pathStr.includes('pay') || pathStr.includes('checkout') || pathStr.includes('invoice') || pathStr.includes('confirm'));
 
     const registrableDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname;
     const publicSuffix = parts.length >= 1 ? parts[parts.length - 1] : '';
@@ -78,41 +121,42 @@ function extractUrlFeatures(rawUrl) {
     let lookalikeBrand = null;
     let lookalikeCertainty = null;
 
-    for (const brand of KNOWN_BRANDS) {
-      const homoglyphs = brand.replace(/o/g, '0').replace(/l/g, '1').replace(/i/g, '1').replace(/e/g, '3');
-      if (homoglyphs !== brand && hostname.includes(homoglyphs)) {
-        lookalikeBrand = brand;
-        lookalikeCertainty = 'substitutions';
-        break;
-      }
-      if (hostname.includes('g00gle') || hostname.includes('paypa1') || hostname.includes('micros0ft') || hostname.includes('app1e')) {
-        lookalikeBrand = brand;
-        lookalikeCertainty = 'substitutions';
-        break;
-      }
-      if (hostname.includes(brand)) {
-        const isOfficial = hostname === `${brand}.com` ||
-                           hostname.endsWith(`.${brand}.com`) ||
-                           hostname === `${brand}.org` ||
-                           hostname.endsWith(`.${brand}.org`) ||
-                           hostname === `${brand}.net` ||
-                           hostname.endsWith(`.${brand}.net`);
-        if (!isOfficial) {
+    // Only perform lookalike detection on untrusted domains
+    if (!trusted) {
+      for (const brand of KNOWN_BRANDS) {
+        const homoglyphs = brand.replace(/o/g, '0').replace(/l/g, '1').replace(/i/g, '1').replace(/e/g, '3');
+        if (homoglyphs !== brand && hostname.includes(homoglyphs)) {
           lookalikeBrand = brand;
-          lookalikeCertainty = 'non_official_name';
+          lookalikeCertainty = 'substitutions';
           break;
+        }
+        if (hostname.includes('g00gle') || hostname.includes('paypa1') || hostname.includes('micros0ft') || hostname.includes('app1e')) {
+          lookalikeBrand = brand;
+          lookalikeCertainty = 'substitutions';
+          break;
+        }
+        if (hostname.includes(brand)) {
+          const isOfficial = hostname === `${brand}.com` ||
+                             hostname.endsWith(`.${brand}.com`) ||
+                             hostname === `${brand}.org` ||
+                             hostname.endsWith(`.${brand}.org`) ||
+                             hostname === `${brand}.net` ||
+                             hostname.endsWith(`.${brand}.net`);
+          if (!isOfficial) {
+            lookalikeBrand = brand;
+            lookalikeCertainty = 'non_official_name';
+            break;
+          }
+        }
+      }
+
+      if (!lookalikeBrand) {
+        if (hostname.includes('bank') || hostname.includes('secure') || hostname.includes('verification') || hostname.includes('account')) {
+          lookalikeBrand = 'financial_institution';
+          lookalikeCertainty = 'non_official_name';
         }
       }
     }
-
-    if (!lookalikeBrand) {
-      if (hostname.includes('bank') || hostname.includes('secure') || hostname.includes('verification') || hostname.includes('account')) {
-        lookalikeBrand = 'financial_institution';
-        lookalikeCertainty = 'non_official_name';
-      }
-    }
-
-    const trusted = isTrustedDomain(hostname);
 
     return {
       url: normalized,
@@ -133,6 +177,7 @@ function extractUrlFeatures(rawUrl) {
       accountPath,
       securityPath,
       paymentPath,
+      isSearchEngine,
       isTrustedDomain: trusted,
       lookalikeBrand,
       lookalikeCertainty,
@@ -146,6 +191,14 @@ function scoreUrlFeatures(features) {
   if (!features) return { score: 0, signals: [] };
   let score = 0;
   const signals = [];
+
+  // Early-return: trusted search engine with clean structure → zero risk
+  // (google.com/search?q=cybersecurity+threat+intelligence must NOT be suspicious)
+  if (features.isSearchEngine && features.isTrustedDomain) {
+    if (!features.hasCredentialsInUrl && !features.isIpHost && !features.lookalikeBrand) {
+      return { score: 0, signals: [] };
+    }
+  }
 
   if (features.isIpHost) {
     score += 30;
@@ -197,8 +250,9 @@ function scoreUrlFeatures(features) {
     signals.push({ type: 'insecure_http', severity: 'low', title: 'Insecure HTTP', description: 'No TLS' });
   }
 
+  // Trusted domain reduction: -30 points (matches trusted-domains.ts getTrustedDomainScore)
   if (features.isTrustedDomain && !features.lookalikeBrand && !features.isIpHost) {
-    score -= 25;
+    score -= 30;
   }
 
   const finalScore = Math.max(0, Math.min(100, score));
@@ -295,7 +349,7 @@ function extractSignals(content, type = 'message') {
   }
 
   if (urlFeatures && urlFeatures.isTrustedDomain && !urlFeatures.lookalikeBrand && !urlFeatures.isIpHost) {
-    score = Math.max(0, score - 25);
+    score = Math.max(0, score - 30);
   }
 
   return {

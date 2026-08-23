@@ -1,4 +1,4 @@
-import { isTrustedDomain, getTrustedDomainScore } from './trusted-domains';
+import { isTrustedDomain, getTrustedDomainScore, isSearchEngineUrl } from './trusted-domains';
 
 export const KNOWN_BRANDS = [
   'paypal',
@@ -12,6 +12,8 @@ export const KNOWN_BRANDS = [
   'icici',
   'axis',
   'bankofindia',
+  'github',
+  'openai',
   'bank',
 ];
 
@@ -43,6 +45,7 @@ export interface UrlFeatures {
   securityPath: boolean;
   paymentPath: boolean;
   isTrustedDomain: boolean;
+  isSearchEngine: boolean;
   lookalikeBrand: string | null;
   lookalikeCertainty: 'substitutions' | 'non_official_name' | null;
 }
@@ -74,14 +77,19 @@ export function extractUrlFeatures(rawUrl: string): UrlFeatures | null {
     const pathSegments = path.split('/').filter(Boolean);
     const pathDepth = pathSegments.length;
 
-    const keywords = ['login', 'signin', 'sign-in', 'verify', 'verification', 'account', 'security', 'secure', 'payment', 'pay', 'confirm', 'kyc', 'wallet', 'update', 'recover', 'recovery', 'authenticate', 'banking'];
-    const suspiciousKeywordsInPath = keywords.filter(kw => path.includes(kw));
+    const isSearchEngine = isSearchEngineUrl(parsed);
+    const isTrusted = isTrustedDomain(hostname);
 
-    const loginPath = path.includes('login') || path.includes('signin') || path.includes('sign-in') || path.includes('auth');
-    const verifyPath = path.includes('verify') || path.includes('verification') || path.includes('kyc');
-    const accountPath = path.includes('account') || path.includes('profile') || path.includes('recovery') || path.includes('update');
-    const securityPath = path.includes('security') || path.includes('secure') || path.includes('authenticate');
-    const paymentPath = path.includes('payment') || path.includes('pay') || path.includes('checkout') || path.includes('invoice') || path.includes('confirm');
+    // Analyze path keywords (NOT query string words, which belong to user search content)
+    const keywords = ['login', 'signin', 'sign-in', 'verify', 'verification', 'account', 'security', 'secure', 'payment', 'pay', 'confirm', 'kyc', 'wallet', 'update', 'recover', 'recovery', 'authenticate', 'banking'];
+    const suspiciousKeywordsInPath = !isSearchEngine ? keywords.filter(kw => path.includes(kw)) : [];
+
+    // Path indicators (ignore search queries like /search?q=...)
+    const loginPath = !isSearchEngine && (path.includes('login') || path.includes('signin') || path.includes('sign-in') || path.includes('auth'));
+    const verifyPath = !isSearchEngine && (path.includes('verify') || path.includes('verification') || path.includes('kyc'));
+    const accountPath = !isSearchEngine && (path.includes('account') || path.includes('profile') || path.includes('recovery') || path.includes('update'));
+    const securityPath = !isSearchEngine && (path.includes('security') || path.includes('secure') || path.includes('authenticate'));
+    const paymentPath = !isSearchEngine && (path.includes('payment') || path.includes('pay') || path.includes('checkout') || path.includes('invoice') || path.includes('confirm'));
 
     // Registrable domain approximation
     const registrableDomain = parts.length >= 2 ? parts.slice(-2).join('.') : hostname;
@@ -91,52 +99,52 @@ export function extractUrlFeatures(rawUrl: string): UrlFeatures | null {
     let lookalikeBrand: string | null = null;
     let lookalikeCertainty: 'substitutions' | 'non_official_name' | null = null;
 
-    for (const brand of KNOWN_BRANDS) {
-      // 1. Homoglyphs & character substitutions (e.g. paypa1, g00gle)
-      const homoglyphs = brand
-        .replace(/o/g, '0')
-        .replace(/l/g, '1')
-        .replace(/i/g, '1')
-        .replace(/e/g, '3');
+    if (!isTrusted) {
+      for (const brand of KNOWN_BRANDS) {
+        // 1. Homoglyphs & character substitutions (e.g. paypa1, g00gle)
+        const homoglyphs = brand
+          .replace(/o/g, '0')
+          .replace(/l/g, '1')
+          .replace(/i/g, '1')
+          .replace(/e/g, '3');
 
-      if (homoglyphs !== brand && hostname.includes(homoglyphs)) {
-        lookalikeBrand = brand;
-        lookalikeCertainty = 'substitutions';
-        break;
-      }
-
-      // Also direct letter substitutions in reverse (e.g. g00gle)
-      if (hostname.includes('g00gle') || hostname.includes('paypa1') || hostname.includes('micros0ft') || hostname.includes('app1e')) {
-        lookalikeBrand = brand;
-        lookalikeCertainty = 'substitutions';
-        break;
-      }
-
-      // 2. Unofficial domain containing brand or banking keywords
-      if (hostname.includes(brand)) {
-        const isOfficial = hostname === `${brand}.com` || 
-                           hostname.endsWith(`.${brand}.com`) || 
-                           hostname === `${brand}.org` || 
-                           hostname.endsWith(`.${brand}.org`) || 
-                           hostname === `${brand}.net` ||
-                           hostname.endsWith(`.${brand}.net`);
-        if (!isOfficial) {
+        if (homoglyphs !== brand && hostname.includes(homoglyphs)) {
           lookalikeBrand = brand;
-          lookalikeCertainty = 'non_official_name';
+          lookalikeCertainty = 'substitutions';
           break;
+        }
+
+        // Direct letter substitutions in reverse (e.g. g00gle, paypa1)
+        if (hostname.includes('g00gle') || hostname.includes('paypa1') || hostname.includes('micros0ft') || hostname.includes('app1e')) {
+          lookalikeBrand = brand;
+          lookalikeCertainty = 'substitutions';
+          break;
+        }
+
+        // 2. Unofficial domain containing brand or banking keywords
+        if (hostname.includes(brand)) {
+          const isOfficial = hostname === `${brand}.com` || 
+                             hostname.endsWith(`.${brand}.com`) || 
+                             hostname === `${brand}.org` || 
+                             hostname.endsWith(`.${brand}.org`) || 
+                             hostname === `${brand}.net` ||
+                             hostname.endsWith(`.${brand}.net`);
+          if (!isOfficial) {
+            lookalikeBrand = brand;
+            lookalikeCertainty = 'non_official_name';
+            break;
+          }
+        }
+      }
+
+      // Keyword based domain impersonation on untrusted hostnames (e.g. secure-bank-verification)
+      if (!lookalikeBrand) {
+        if ((hostname.includes('bank') || hostname.includes('secure') || hostname.includes('verification')) && !isTrusted) {
+          lookalikeBrand = 'financial_institution';
+          lookalikeCertainty = 'non_official_name';
         }
       }
     }
-
-    // Keyword based domain impersonation (e.g. secure-bank-verification)
-    if (!lookalikeBrand) {
-      if (hostname.includes('bank') || hostname.includes('secure') || hostname.includes('verification') || hostname.includes('account')) {
-        lookalikeBrand = 'financial_institution';
-        lookalikeCertainty = 'non_official_name';
-      }
-    }
-
-    const trusted = isTrustedDomain(hostname);
 
     return {
       url: normalized,
@@ -165,7 +173,8 @@ export function extractUrlFeatures(rawUrl: string): UrlFeatures | null {
       accountPath,
       securityPath,
       paymentPath,
-      isTrustedDomain: trusted,
+      isTrustedDomain: isTrusted,
+      isSearchEngine,
       lookalikeBrand,
       lookalikeCertainty,
     };
@@ -181,6 +190,14 @@ export function scoreUrlFeatures(features: UrlFeatures | null): { score: number;
 
   let score = 0;
   const signals: Array<{ type: string; severity: 'low' | 'medium' | 'high' | 'critical'; title: string; description: string }> = [];
+
+  // Special handling: Legitimate Search Engine query URLs (e.g. google.com/search?q=threat+intelligence)
+  // Search queries contain user search topics, NOT malicious domain behavior
+  if (features.isSearchEngine && features.isTrustedDomain) {
+    if (!features.hasCredentialsInUrl && !features.isIpHost && !features.lookalikeBrand) {
+      return { score: 0, signals: [] };
+    }
+  }
 
   // 1. IP Host
   if (features.isIpHost) {
@@ -214,7 +231,7 @@ export function scoreUrlFeatures(features: UrlFeatures | null): { score: number;
     }
   }
 
-  // 3. Sensitive Paths (Additive)
+  // 3. Sensitive Paths (Additive on non-search endpoints)
   if (features.loginPath) {
     score += 20;
     signals.push({
@@ -288,8 +305,8 @@ export function scoreUrlFeatures(features: UrlFeatures | null): { score: number;
     });
   }
 
-  // 7. Percent-encoded URL
-  if (features.hasPercentEncoding) {
+  // 7. Percent-encoded URL on untrusted domain
+  if (features.hasPercentEncoding && !features.isTrustedDomain) {
     score += 10;
     signals.push({
       type: 'encoded_url',

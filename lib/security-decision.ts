@@ -144,11 +144,13 @@ export function evaluateSecurityDecision(input: SecurityDecisionInput): Security
   } else {
     // Fallback / AI Unavailable mode
     if (heuristicSignals.length === 0 || heuristicScore === 0) {
-      finalRisk = 35;
-      finalConfidence = 60;
+      // Zero signals = zero threat evidence — uncertainty ≠ suspicion
+      finalRisk = 5;
+      finalConfidence = 80;
     } else {
-      finalRisk = Math.max(heuristicScore, 45);
-      finalConfidence = Math.min(95, 75 + heuristicSignals.length * 5);
+      // Let the actual heuristic score stand; hard rules will enforce minimums if needed
+      finalRisk = heuristicScore;
+      finalConfidence = Math.min(70, 40 + heuristicSignals.length * 8);
     }
   }
 

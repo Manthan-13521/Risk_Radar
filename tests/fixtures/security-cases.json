@@ -77,6 +77,61 @@
     "description": "Standard IANA example domain"
   },
   {
+    "id": "SAFE-SEARCH-01",
+    "type": "url",
+    "content": "https://www.google.com/search?q=cybersecurity+threat+intelligence",
+    "expectedRiskMin": 0,
+    "expectedRiskMax": 15,
+    "expectedClassification": "safe",
+    "expectedIntent": "uncertain",
+    "expectedAction": "allow",
+    "description": "Google search: security-topic words in query must NOT produce suspicious verdict"
+  },
+  {
+    "id": "SAFE-SEARCH-02",
+    "type": "url",
+    "content": "https://www.google.com/search?q=how+to+identify+phishing+attacks",
+    "expectedRiskMin": 0,
+    "expectedRiskMax": 15,
+    "expectedClassification": "safe",
+    "expectedIntent": "uncertain",
+    "expectedAction": "allow",
+    "description": "Google search: phishing awareness query — searching about phishing is not phishing"
+  },
+  {
+    "id": "SAFE-SEARCH-03",
+    "type": "url",
+    "content": "https://www.google.com/search?q=how+to+protect+against+malware",
+    "expectedRiskMin": 0,
+    "expectedRiskMax": 15,
+    "expectedClassification": "safe",
+    "expectedIntent": "uncertain",
+    "expectedAction": "allow",
+    "description": "Google search: malware protection query on trusted domain"
+  },
+  {
+    "id": "SAFE-SEARCH-04",
+    "type": "url",
+    "content": "https://www.bing.com/search?q=exploit+CVE+vulnerability+patch",
+    "expectedRiskMin": 0,
+    "expectedRiskMax": 15,
+    "expectedClassification": "safe",
+    "expectedIntent": "uncertain",
+    "expectedAction": "allow",
+    "description": "Bing search: security research terms in query must not trigger suspicion"
+  },
+  {
+    "id": "SAFE-SEARCH-05",
+    "type": "url",
+    "content": "https://duckduckgo.com/?q=OWASP+injection+attack+prevention",
+    "expectedRiskMin": 0,
+    "expectedRiskMax": 15,
+    "expectedClassification": "safe",
+    "expectedIntent": "uncertain",
+    "expectedAction": "allow",
+    "description": "DuckDuckGo search: OWASP security query is benign researcher behavior"
+  },
+  {
     "id": "SAFE-MSG-01",
     "type": "message",
     "content": "Hi team, tomorrow's project meeting has been moved to 4 PM. Please use the usual calendar invitation.",

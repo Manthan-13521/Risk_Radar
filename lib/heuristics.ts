@@ -1,4 +1,4 @@
-import { extractUrlFeatures, scoreUrlFeatures, KNOWN_BRANDS } from './url-analysis';
+import { extractUrlFeatures, scoreUrlFeatures, KNOWN_BRANDS, UrlFeatures } from './url-analysis';
 import { getTrustedDomainScore } from './trusted-domains';
 
 export interface HeuristicSignal {
@@ -58,108 +58,93 @@ export function detectCredentials(text: string): { detected: boolean; signal: He
     'pin',
     'login',
     'sign in',
-    'sign-in',
-    'verify account',
-    'kyc',
-    'username',
-    'security code',
-    'authentication',
+    'ssn',
+    'bank account',
+    'credit card',
+    'debit card',
+    'cvv',
     'credentials',
     'secret code',
-    'passcode',
-    'new device',
+    'verify identity',
+    'security question',
   ];
   const lower = text.toLowerCase();
-
-  // Context check: If it says "never share", it's safe educational guidance
-  if (lower.includes('never share') || lower.includes('do not share') || lower.includes('will never ask')) {
-    return { detected: false, signal: null };
-  }
-
   const matches = credWords.filter((w) => lower.includes(w));
   if (matches.length === 0) {
     return { detected: false, signal: null };
   }
 
-  const isSensitive = matches.some((m) =>
-    ['password', 'otp', 'pin', 'security code', 'kyc', 'credentials', 'passcode'].includes(m)
-  );
+  const isCritical = matches.some((m) => ['password', 'otp', 'pin', 'cvv'].includes(m));
 
   return {
     detected: true,
     signal: {
       type: 'credential_request',
-      severity: isSensitive ? 'high' : 'medium',
-      title: isSensitive ? 'Sensitive Credential Request' : 'Authentication Notice',
-      description: 'The message asks for or discusses passwords, OTPs, or authentication credentials.',
+      severity: isCritical ? 'high' : 'medium',
+      title: 'Credential or sensitive data request',
+      description: 'The message requests sensitive credentials, financial tokens, or authentication factors.',
       matches,
     },
   };
 }
 
 export function detectPayment(text: string): { detected: boolean; signal: HeuristicSignal | null } {
-  const severeWords = [
-    'processing fee',
-    'refund fee',
-    'claim your prize',
-    'pay now',
+  const payWords = [
+    'bitcoin',
+    'btc',
+    'crypto',
+    'usdt',
+    'gift card',
+    'western union',
+    'moneygram',
+    'wire transfer',
+    'pay immediately',
+    'payment required',
+    'unpaid invoice',
+    'overdue payment',
+    'transfer funds',
     'send money',
-    'upi pin',
-    'transfer fee',
-    'release fee',
-    'customs fee',
+    'processing fee',
+    'redelivery fee',
   ];
-  const generalPayWords = ['payment', 'pay', 'fee', 'upi', 'transfer', 'deposit', 'invoice', 'billing', 'subscription', 'renew'];
   const lower = text.toLowerCase();
-
-  const strongMatches = severeWords.filter((w) => lower.includes(w));
-  const generalMatches = generalPayWords.filter((w) => lower.includes(w));
-
-  if (strongMatches.length > 0) {
-    return {
-      detected: true,
-      signal: {
-        type: 'payment_request',
-        severity: 'high',
-        title: 'Fee / Payment Demand',
-        description: 'The message demands advance fees or payments to release funds or packages.',
-        matches: strongMatches,
-      },
-    };
+  const matches = payWords.filter((w) => lower.includes(w));
+  if (matches.length === 0) {
+    return { detected: false, signal: null };
   }
 
-  if (generalMatches.length > 0) {
-    return {
-      detected: true,
-      signal: {
-        type: 'payment_request',
-        severity: 'medium',
-        title: 'Financial Context',
-        description: 'The message mentions payments, transfers, invoices, or subscriptions.',
-        matches: generalMatches,
-      },
-    };
-  }
+  const isCritical = matches.some((m) =>
+    ['bitcoin', 'btc', 'gift card', 'western union', 'crypto'].includes(m)
+  );
 
-  return { detected: false, signal: null };
+  return {
+    detected: true,
+    signal: {
+      type: 'payment_request',
+      severity: isCritical ? 'high' : 'medium',
+      title: 'Payment or fund transfer demand',
+      description: 'The message demands payment through wire transfer, cryptocurrency, or unconventional payment methods.',
+      matches,
+    },
+  };
 }
 
 export function detectDeliveryScam(text: string): { detected: boolean; signal: HeuristicSignal | null } {
-  const deliveryTerms = ['parcel', 'package', 'delivery', 'redelivery', 'courier', 'dispatch', 'shipment', 'postal'];
-  const actionTerms = ['fee', 'pay', 'cancel', 'prevent cancellation', 'reschedule', 'address confirmation', 'waiting'];
+  const deliveryWords = ['package', 'parcel', 'shipment', 'delivery', 'fedex', 'dhl', 'ups', 'indiapost', 'postal', 'courier', 'customs fee', 'redelivery'];
+  const actionWords = ['pay', 'fee', 'schedule', 'track', 'update address', 'confirm address', 'claim'];
   const lower = text.toLowerCase();
 
-  const foundDelivery = deliveryTerms.filter((d) => lower.includes(d));
-  const foundAction = actionTerms.filter((a) => lower.includes(a));
+  const foundDelivery = deliveryWords.filter((w) => lower.includes(w));
+  const foundAction = actionWords.filter((w) => lower.includes(w));
 
-  if (foundDelivery.length > 0 && foundAction.length > 0) {
+  if (foundDelivery.length >= 1 && foundAction.length >= 1) {
     return {
       detected: true,
       signal: {
         type: 'delivery_scam',
         severity: 'high',
-        title: 'Delivery / Redelivery Lure',
-        description: 'The message pairs parcel delivery language with urgency or payment requests.',
+        title: 'Fake Delivery Notification / Redelivery Fraud',
+        description: 'The message impersonates a courier or postal service demanding fees or identity update to release a package.',
         matches: [...foundDelivery, ...foundAction],
       },
     };
@@ -169,8 +154,8 @@ export function detectDeliveryScam(text: string): { detected: boolean; signal: H
 }
 
 export function detectFinancialScam(text: string): { detected: boolean; signal: HeuristicSignal | null } {
-  const lotteryTerms = ['won', 'lottery', 'prize', 'congratulations', 'winner', 'selected', 'awarded', 'jackpot', '₹', '$'];
-  const feeTerms = ['processing fee', 'claim', 'tax fee', 'registration fee', 'pay', 'fee immediately', 'claim your prize'];
+  const lotteryTerms = ['won', 'lottery', 'prize', 'congratulations', 'winner', 'selected', 'awarded', 'jackpot'];
+  const feeTerms = ['processing fee', 'claim', 'tax fee', 'registration fee', 'fee immediately', 'claim your prize'];
   const lower = text.toLowerCase();
 
   const foundLottery = lotteryTerms.filter((l) => lower.includes(l));
@@ -211,8 +196,10 @@ export function detectBrandMismatch(text: string, foundUrl: string): { detected:
       const host = parsed.hostname.toLowerCase();
       const isOfficial = host === `${claimedBrand}.com` || 
                          host.endsWith(`.${claimedBrand}.com`) || 
-                         host === `${claimedBrand}.org` ||
-                         host.endsWith(`.${claimedBrand}.org`);
+                         host === `${claimedBrand}.org` || 
+                         host.endsWith(`.${claimedBrand}.org`) ||
+                         host === `${claimedBrand}.net` ||
+                         host.endsWith(`.${claimedBrand}.net`);
       if (!isOfficial) {
         return {
           detected: true,
@@ -232,22 +219,34 @@ export function detectBrandMismatch(text: string, foundUrl: string): { detected:
   return { detected: false, signal: null };
 }
 
-export function extractSignals(content: string, type: string = 'message') {
+export function extractSignals(content: string, type: string = 'message'): {
+  signals: HeuristicSignal[];
+  score: number;
+  urlFeatures: UrlFeatures | null;
+} {
   const signals: HeuristicSignal[] = [];
   let score = 0;
 
+  const trimmed = content.trim();
+  const isPureUrl = type === 'url' || trimmed.startsWith('http://') || trimmed.startsWith('https://');
+
   let targetUrl = '';
-  if (type === 'url' || content.trim().startsWith('http://') || content.trim().startsWith('https://')) {
-    targetUrl = content.trim();
+  let messageText = content;
+
+  if (isPureUrl) {
+    targetUrl = trimmed;
+    messageText = ''; // Pure URL does not contain human message body
   } else {
     const urlMatch = content.match(/https?:\/\/[^\s]+/i);
     if (urlMatch) {
       targetUrl = urlMatch[0];
+      // Remove URL from message text so URL query strings don't trigger false message heuristics
+      messageText = content.replace(urlMatch[0], ' ');
     }
   }
 
-  // 1. URL Analysis
-  let urlFeatures = null;
+  // 1. URL Structural & Domain Security Analysis
+  let urlFeatures: UrlFeatures | null = null;
   if (targetUrl) {
     urlFeatures = extractUrlFeatures(targetUrl);
     if (urlFeatures) {
@@ -257,46 +256,48 @@ export function extractSignals(content: string, type: string = 'message') {
     }
   }
 
-  // 2. Message Heuristics
-  const urgency = detectUrgency(content);
-  if (urgency.detected && urgency.signal) {
-    score += urgency.signal.severity === 'high' ? 35 : 20;
-    signals.push(urgency.signal);
-  }
+  // 2. Message / Social Engineering Heuristics (ONLY on non-empty message bodies)
+  if (messageText.trim().length > 0) {
+    const urgency = detectUrgency(messageText);
+    if (urgency.detected && urgency.signal) {
+      score += urgency.signal.severity === 'high' ? 35 : 20;
+      signals.push(urgency.signal);
+    }
 
-  const credentials = detectCredentials(content);
-  if (credentials.detected && credentials.signal) {
-    score += credentials.signal.severity === 'high' ? 35 : 20;
-    signals.push(credentials.signal);
-  }
+    const credentials = detectCredentials(messageText);
+    if (credentials.detected && credentials.signal) {
+      score += credentials.signal.severity === 'high' ? 35 : 20;
+      signals.push(credentials.signal);
+    }
 
-  const payment = detectPayment(content);
-  if (payment.detected && payment.signal) {
-    score += payment.signal.severity === 'high' ? 30 : 20;
-    signals.push(payment.signal);
-  }
+    const payment = detectPayment(messageText);
+    if (payment.detected && payment.signal) {
+      score += payment.signal.severity === 'high' ? 30 : 20;
+      signals.push(payment.signal);
+    }
 
-  const delivery = detectDeliveryScam(content);
-  if (delivery.detected && delivery.signal) {
-    score += 25;
-    signals.push(delivery.signal);
-  }
-
-  const financial = detectFinancialScam(content);
-  if (financial.detected && financial.signal) {
-    score += 40;
-    signals.push(financial.signal);
-  }
-
-  if (targetUrl) {
-    const brandMismatch = detectBrandMismatch(content, targetUrl);
-    if (brandMismatch.detected && brandMismatch.signal) {
+    const delivery = detectDeliveryScam(messageText);
+    if (delivery.detected && delivery.signal) {
       score += 25;
-      signals.push(brandMismatch.signal);
+      signals.push(delivery.signal);
+    }
+
+    const financial = detectFinancialScam(messageText);
+    if (financial.detected && financial.signal) {
+      score += 40;
+      signals.push(financial.signal);
+    }
+
+    if (targetUrl) {
+      const brandMismatch = detectBrandMismatch(messageText, targetUrl);
+      if (brandMismatch.detected && brandMismatch.signal) {
+        score += 25;
+        signals.push(brandMismatch.signal);
+      }
     }
   }
 
-  // Safe domain credit if no strong attack signals exist
+  // 3. Trusted domain score modifier (applies if no attack signals are present)
   if (urlFeatures && urlFeatures.isTrustedDomain && !urlFeatures.lookalikeBrand && !urlFeatures.isIpHost) {
     const benignScore = getTrustedDomainScore(urlFeatures.hostname);
     score = Math.max(0, score + benignScore);

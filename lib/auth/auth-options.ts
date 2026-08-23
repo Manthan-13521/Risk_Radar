@@ -16,6 +16,9 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  jwt: {
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'shieldsense-production-secret-auth-key-2025',
+  },
   pages: {
     signIn: '/login',
     error: '/login',

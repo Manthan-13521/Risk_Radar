@@ -2,16 +2,26 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { getDb } from '@/lib/mongodb';
+import { getServerAuthSession } from '@/lib/auth/auth-options';
 
 export default async function HistoryPage({
   searchParams,
 }: {
   searchParams: { type?: string; classification?: string };
 }) {
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
+
   const db = await getDb();
-  const query: Record<string, string> = {};
+  const query: Record<string, unknown> = {};
   if (searchParams.type && searchParams.type !== 'all') query.inputType = searchParams.type;
   if (searchParams.classification && searchParams.classification !== 'all') query.classification = searchParams.classification;
+
+  // Strict user-ownership isolation
+  if (userId && !isAdmin) {
+    query.$or = [{ userId }, { isDemo: true }, { userId: { $exists: false } }];
+  }
 
   const scans = await db.collection('scans').find(query).sort({ createdAt: -1 }).limit(100).toArray();
   const activeClass = searchParams.classification || 'all';
@@ -29,15 +39,15 @@ export default async function HistoryPage({
       {/* Header */}
       <div className="border-b pb-6" style={{ borderColor: '#C4B5B0' }}>
         <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Telemetry</div>
-        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>SCAN HISTORY</h1>
-        <p className="text-sm mt-1 font-medium" style={{ color: '#554B49' }}>Complete immutable telemetry and audit record of all processed investigations.</p>
+        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>MY SCAN HISTORY</h1>
+        <p className="text-sm mt-1 font-medium" style={{ color: '#554B49' }}>Complete immutable telemetry and audit record of all your processed investigations.</p>
       </div>
 
       {/* Filters */}
       <div className="rounded-2xl border p-4 space-y-3 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-extrabold uppercase tracking-widest mr-2" style={{ color: '#554B49' }}>Severity:</span>
-          {['all', 'safe', 'suspicious', 'dangerous', 'critical'].map(c => (
+          {['all', 'safe', 'suspicious', 'dangerous', 'critical'].map((c) => (
             <Link
               key={c}
               href={`/history?classification=${c}&type=${activeType}`}
@@ -54,7 +64,7 @@ export default async function HistoryPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-extrabold uppercase tracking-widest mr-2" style={{ color: '#554B49' }}>Type:</span>
-          {['all', 'url', 'message', 'file'].map(t => (
+          {['all', 'url', 'message', 'file'].map((t) => (
             <Link
               key={t}
               href={`/history?classification=${activeClass}&type=${t}`}
@@ -69,14 +79,14 @@ export default async function HistoryPage({
             </Link>
           ))}
         </div>
-        <div className="text-xs font-bold font-mono" style={{ color: '#554B49' }}>{scans.length} records</div>
+        <div className="text-xs font-bold font-mono" style={{ color: '#554B49' }}>{scans.length} records found</div>
       </div>
 
       {/* Table */}
       {scans.length === 0 ? (
         <div className="p-12 text-center rounded-2xl border" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
           <div className="text-lg font-extrabold mb-2" style={{ color: '#111111' }}>NO RECORDS FOUND</div>
-          <p className="text-sm mb-4 font-medium" style={{ color: '#554B49' }}>No investigations match the selected filters.</p>
+          <p className="text-sm mb-4 font-medium" style={{ color: '#554B49' }}>No investigations match your filters.</p>
           <Link href="/history" className="inline-flex px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm" style={{ background: '#990011' }}>Clear Filters</Link>
         </div>
       ) : (
@@ -85,13 +95,13 @@ export default async function HistoryPage({
             <table className="w-full text-left text-xs">
               <thead className="border-b" style={{ borderColor: '#C4B5B0', background: '#D3C9C5' }}>
                 <tr>
-                  {['Timestamp', 'Type', 'Target / Summary', 'Classification', 'Risk', 'Confidence', 'Intent', 'Action', ''].map(h => (
+                  {['Timestamp', 'Type', 'Target / Summary', 'Classification', 'Risk', 'Confidence', 'Intent', 'Action', ''].map((h) => (
                     <th key={h} className="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest" style={{ color: '#554B49' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y" style={{ borderColor: '#C4B5B0' }}>
-                {scans.map(scan => {
+                {scans.map((scan) => {
                   const { bg, color } = clsColor(String(scan.classification));
                   const riskColor = scan.riskScore >= 80 ? '#990011' : scan.riskScore >= 50 ? '#B86A00' : '#111111';
                   return (
@@ -102,8 +112,8 @@ export default async function HistoryPage({
                       <td className="px-4 py-3 capitalize font-bold" style={{ color: '#111111' }}>{scan.inputType}</td>
                       <td className="px-4 py-3 max-w-xs truncate font-mono text-[11px]" style={{ color: '#554B49' }}>
                         {scan.inputType === 'file'
-                          ? (scan.inputMetadata as Record<string, unknown>)?.filename as string
-                          : (scan.inputMetadata as Record<string, unknown>)?.truncatedContent as string}
+                          ? ((scan.inputMetadata as Record<string, unknown>)?.filename as string)
+                          : ((scan.inputMetadata as Record<string, unknown>)?.truncatedContent as string)}
                       </td>
                       <td className="px-4 py-3">
                         <span className="px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase shadow-xs" style={{ background: bg, color }}>{String(scan.classification)}</span>

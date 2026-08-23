@@ -1,9 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 import { getPatternStats } from '@/lib/dna';
+import { getServerAuthSession } from '@/lib/auth/auth-options';
 
 export default async function ThreatDNAPage() {
-  const stats = await getPatternStats();
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
+
+  const stats = await getPatternStats(userId, isAdmin);
 
   return (
     <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#ECE6E2' }}>

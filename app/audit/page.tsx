@@ -1,9 +1,14 @@
 export const dynamic = 'force-dynamic';
 
 import { getAuditLogs } from '@/lib/audit-service';
+import { getServerAuthSession } from '@/lib/auth/auth-options';
 
 export default async function AuditLogsPage() {
-  const logs = await getAuditLogs(100);
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
+
+  const logs = await getAuditLogs(100, userId, isAdmin);
 
   function sevColor(sev: string) {
     if (sev === 'critical') return { bg: 'rgba(153,0,17,0.12)', color: '#990011' };

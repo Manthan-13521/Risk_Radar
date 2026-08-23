@@ -18,15 +18,36 @@ const VERDICT_CONFIG = {
   critical:  { label: 'CRITICAL THREAT',         accent: '#76000D', bg: 'rgba(118,0,13,0.12)',  border: 'rgba(118,0,13,0.45)' },
 };
 
+import { getServerAuthSession } from '@/lib/auth/auth-options';
+
 export default async function InvestigationResult({ params }: { params: { id: string } }) {
   if (!ObjectId.isValid(params.id)) {
-    return <div className="p-12 text-center" style={{ color: '#111111' }}>Invalid investigation ID.</div>;
+    return <div className="p-12 text-center font-bold" style={{ color: '#111111' }}>Invalid investigation ID.</div>;
   }
+
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   const db = await getDb();
   const scan = await db.collection('scans').findOne({ _id: new ObjectId(params.id) });
   if (!scan) {
-    return <div className="p-12 text-center" style={{ color: '#111111' }}>Investigation not found.</div>;
+    return <div className="p-12 text-center font-bold" style={{ color: '#111111' }}>Investigation not found.</div>;
+  }
+
+  // Authorization Guard: User A cannot see User B's scan unless Admin or Demo scan
+  if (scan.userId && userId && scan.userId !== userId && !isAdmin && !scan.isDemo) {
+    return (
+      <div className="p-12 text-center space-y-3" style={{ color: '#111111' }}>
+        <h2 className="text-xl font-extrabold" style={{ color: '#990011' }}>ACCESS RESTRICTED</h2>
+        <p className="text-sm font-medium" style={{ color: '#554B49' }}>
+          This investigation belongs to another user account. You do not have permission to view its contents.
+        </p>
+        <Link href="/history" className="inline-flex px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background: '#990011' }}>
+          Back to My Scans
+        </Link>
+      </div>
+    );
   }
 
   const voiceText = generateVoiceSummary({ riskScore: scan.riskScore, classification: scan.classification });

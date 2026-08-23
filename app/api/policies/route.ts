@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPolicies, createPolicy } from '@/lib/policy-service';
+import { getServerAuthSession } from '@/lib/auth/auth-options';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const session = await getServerAuthSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const policies = await getPolicies();
     return NextResponse.json(policies.map((p) => ({ ...p, _id: p._id?.toString() })));
   } catch (e) {
@@ -33,6 +39,19 @@ const policySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerAuthSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Role check: Only ADMIN can create security policies
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden: Administrator privileges required to configure system policies.' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const data = policySchema.parse(body);
     const id = await createPolicy(data);

@@ -27,9 +27,20 @@ const PIPELINE = [
   { n: '05', label: 'Authoritative Policy Guard' },
 ];
 
+import { getServerAuthSession } from '@/lib/auth/auth-options';
+
 export default async function ScannerPage() {
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
+
   const db = await getDb();
-  const recentScans = await db.collection('scans').find({}).sort({ createdAt: -1 }).limit(5).toArray();
+  const query: Record<string, unknown> = {};
+  if (userId && !isAdmin) {
+    query.$or = [{ userId }, { isDemo: true }, { userId: { $exists: false } }];
+  }
+
+  const recentScans = await db.collection('scans').find(query).sort({ createdAt: -1 }).limit(5).toArray();
 
   return (
     <div className="p-6 md:p-10 max-w-[1200px] mx-auto space-y-8" style={{ background: '#ECE6E2' }}>

@@ -65,11 +65,10 @@ function jaccardSimilarity(a: string[], b: string[]): number {
 }
 
 /**
- * Find the best DNA match among recent stored scans.
- * CRITICAL RULE: Requires at least 2 meaningful tags on both scans!
- * Empty or UNANALYZED tags are never matched.
+ * Find the best DNA match among stored scans.
+ * User scans are matched against user's own history + demo scans to prevent cross-user data leakage.
  */
-export async function findSimilarDNA(newTagsRaw: string[]): Promise<DnaMatch[]> {
+export async function findSimilarDNA(newTagsRaw: string[], userId?: string | null): Promise<DnaMatch[]> {
   const newTags = Array.from(
     new Set(
       newTagsRaw
@@ -82,9 +81,19 @@ export async function findSimilarDNA(newTagsRaw: string[]): Promise<DnaMatch[]> 
   if (newTags.length < 2) return [];
 
   const db = await getDb();
+  
+  // Privacy isolation query: user scans + global demo scans
+  const query: Record<string, unknown> = {
+    dnaTags: { $exists: true, $ne: [] },
+  };
+
+  if (userId) {
+    query.$or = [{ userId }, { isDemo: true }, { userId: { $exists: false } }];
+  }
+
   const recent = await db
     .collection('scans')
-    .find({ dnaTags: { $exists: true, $ne: [] } }, { projection: { dnaTags: 1, attackerIntent: 1 } })
+    .find(query, { projection: { dnaTags: 1, attackerIntent: 1 } })
     .sort({ createdAt: -1 })
     .limit(100)
     .toArray();
@@ -100,7 +109,6 @@ export async function findSimilarDNA(newTagsRaw: string[]): Promise<DnaMatch[]> 
         )
       );
 
-      // Must have at least 2 meaningful tags in historical scan as well
       if (scanTags.length < 2) return null;
 
       const overlapPercent = jaccardSimilarity(newTags, scanTags);
@@ -122,11 +130,17 @@ export async function findSimilarDNA(newTagsRaw: string[]): Promise<DnaMatch[]> 
   return matches.length > 0 ? [matches[0]] : [];
 }
 
-export async function getPatternStats() {
+export async function getPatternStats(userId?: string | null, isAdmin = false) {
   const db = await getDb();
+  const query: Record<string, unknown> = {};
+
+  if (userId && !isAdmin) {
+    query.$or = [{ userId }, { isDemo: true }, { userId: { $exists: false } }];
+  }
+
   const scans = await db
     .collection('scans')
-    .find({}, { projection: { dnaTags: 1, classification: 1, createdAt: 1 } })
+    .find(query, { projection: { dnaTags: 1, classification: 1, createdAt: 1 } })
     .sort({ createdAt: -1 })
     .limit(100)
     .toArray();

@@ -4,14 +4,20 @@ import Link from 'next/link';
 import { getIncidentById } from '@/lib/incident-service';
 import { IncidentActions } from '@/components/IncidentActions';
 
+import { getServerAuthSession } from '@/lib/auth/auth-options';
+
 export default async function IncidentDetailPage({ params }: { params: { id: string } }) {
-  const incident = await getIncidentById(params.id);
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
+
+  const incident = await getIncidentById(params.id, userId, isAdmin);
 
   if (!incident) {
     return (
       <div className="p-12 text-center" style={{ color: '#111111' }}>
-        <h2 className="text-xl font-extrabold mb-2">INCIDENT NOT FOUND</h2>
-        <p className="text-sm mb-4" style={{ color: '#554B49' }}>The requested incident ID does not exist in the database.</p>
+        <h2 className="text-xl font-extrabold mb-2">INCIDENT NOT FOUND OR ACCESS DENIED</h2>
+        <p className="text-sm mb-4" style={{ color: '#554B49' }}>This incident does not exist or you do not have permission to view it.</p>
         <Link href="/incidents" className="text-xs font-bold" style={{ color: '#990011' }}>
           ← Back to Incident Response
         </Link>

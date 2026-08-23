@@ -20,27 +20,34 @@ export interface SecurityPosture {
   status: 'HEALTHY' | 'WATCH' | 'DEGRADED' | 'CRITICAL';
 }
 
-let cachedStats: { data: DashboardStats; timestamp: number } | null = null;
-const CACHE_TTL_MS = 3000; // 3-second cache for instant page loads
-
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const now = Date.now();
-  if (cachedStats && now - cachedStats.timestamp < CACHE_TTL_MS) {
-    return cachedStats.data;
-  }
-
+export async function getDashboardStats(
+  userId?: string | null,
+  isAdmin = false
+): Promise<DashboardStats> {
   const db = await getDb();
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
+  const baseFilter: Record<string, unknown> = {};
+  if (userId && !isAdmin) {
+    baseFilter.$or = [{ userId }, { isDemo: true }, { userId: { $exists: false } }];
+  }
+
+  const todayFilter = {
+    ...baseFilter,
+    createdAt: { $gte: startOfDay },
+  };
+
   const [totalScans, todayScans, classificationCounts, recentScans, dnaTagData] = await Promise.all([
-    db.collection('scans').countDocuments(),
-    db.collection('scans').countDocuments({ createdAt: { $gte: startOfDay } }),
+    db.collection('scans').countDocuments(baseFilter),
+    db.collection('scans').countDocuments(todayFilter),
     db.collection('scans').aggregate([
+      ...(Object.keys(baseFilter).length > 0 ? [{ $match: baseFilter }] : []),
       { $group: { _id: '$classification', count: { $sum: 1 } } },
     ]).toArray(),
-    db.collection('scans').find({}).sort({ createdAt: -1 }).limit(10).toArray(),
+    db.collection('scans').find(baseFilter).sort({ createdAt: -1 }).limit(10).toArray(),
     db.collection('scans').aggregate([
+      ...(Object.keys(baseFilter).length > 0 ? [{ $match: baseFilter }] : []),
       { $unwind: '$dnaTags' },
       { $match: { dnaTags: { $exists: true, $ne: '' } } },
       { $group: { _id: '$dnaTags', count: { $sum: 1 }, avgRisk: { $avg: '$riskScore' } } },
@@ -68,7 +75,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     dangerous: s.classification === 'dangerous' || s.classification === 'critical' ? 1 : 0,
   }));
 
-  const data: DashboardStats = {
+  return {
     totalScans,
     todayScans,
     threatsDetected,
@@ -87,9 +94,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       critical: counts.critical || 0,
     },
   };
-
-  cachedStats = { data, timestamp: now };
-  return data;
 }
 
 export function calculateSecurityPosture(stats: DashboardStats): SecurityPosture {

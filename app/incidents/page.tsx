@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { getIncidents } from '@/lib/incident-service';
+import { getServerAuthSession } from '@/lib/auth/auth-options';
 import { IncidentListWithDrawer } from '@/components/IncidentListWithDrawer';
 import { IncidentItem } from '@/components/IncidentDrawer';
 
@@ -10,7 +11,11 @@ export default async function IncidentsPage({
 }: {
   searchParams?: { filter?: string };
 }) {
-  const rawIncidents = await getIncidents(100);
+  const session = await getServerAuthSession();
+  const userId = session?.user?.id;
+  const isAdmin = session?.user?.role === 'ADMIN';
+
+  const rawIncidents = await getIncidents(100, userId, isAdmin);
   const filter = searchParams?.filter?.toLowerCase() || 'all';
 
   const filtered = rawIncidents.filter((inc) => {
@@ -20,9 +25,9 @@ export default async function IncidentsPage({
     return true;
   });
 
-  const openCount = rawIncidents.filter(i => i.status !== 'resolved').length;
-  const criticalCount = rawIncidents.filter(i => i.severity === 'critical').length;
-  const slaBreachedCount = rawIncidents.filter(i => i.severity === 'critical' || i.severity === 'high').length;
+  const openCount = rawIncidents.filter((i) => i.status !== 'resolved').length;
+  const criticalCount = rawIncidents.filter((i) => i.severity === 'critical').length;
+  const slaBreachedCount = rawIncidents.filter((i) => i.severity === 'critical' || i.severity === 'high').length;
   const avgRisk = rawIncidents.length > 0
     ? Math.round(rawIncidents.reduce((sum, i) => sum + i.riskScore, 0) / rawIncidents.length)
     : 0;
@@ -37,8 +42,7 @@ export default async function IncidentsPage({
     { label: 'RESOLVED', key: 'resolved' },
   ];
 
-  // Cast for client drawer
-  const serializedIncidents: IncidentItem[] = filtered.map(inc => ({
+  const serializedIncidents: IncidentItem[] = filtered.map((inc) => ({
     _id: inc._id ? String(inc._id) : undefined,
     incidentId: inc.incidentId,
     severity: inc.severity,
@@ -60,7 +64,7 @@ export default async function IncidentsPage({
       {/* Header */}
       <div className="border-b pb-6" style={{ borderColor: '#C4B5B0' }}>
         <div className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#990011' }}>Security Operations</div>
-        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>INCIDENT RESPONSE</h1>
+        <h1 className="text-3xl font-extrabold" style={{ color: '#111111' }}>MY INCIDENT RESPONSE</h1>
         <p className="text-sm mt-1" style={{ color: '#554B49' }}>
           Monitor, investigate and resolve security events. Click any incident to open the 3-line breakdown side popup unit.
         </p>
@@ -73,7 +77,7 @@ export default async function IncidentsPage({
           { label: 'CRITICAL SEVERITY', value: criticalCount, color: '#76000D' },
           { label: 'SLA BREACHED', value: slaBreachedCount, color: '#B86A00' },
           { label: 'AVG RISK', value: avgRisk, suffix: '/100', color: '#111111' },
-        ].map(m => (
+        ].map((m) => (
           <div key={m.label} className="rounded-xl border p-5 shadow-sm" style={{ background: '#E0D8D4', borderColor: '#C4B5B0' }}>
             <div className="text-[10px] font-extrabold uppercase tracking-widest mb-2" style={{ color: '#554B49' }}>{m.label}</div>
             <div className="text-3xl font-extrabold font-mono" style={{ color: m.color }}>
@@ -87,7 +91,7 @@ export default async function IncidentsPage({
       {/* Filter bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <span className="text-[10px] font-extrabold uppercase tracking-widest shrink-0 mr-1" style={{ color: '#554B49' }}>Filter:</span>
-        {FILTERS.map(f => {
+        {FILTERS.map((f) => {
           const active = filter === f.key;
           return (
             <Link

@@ -4,11 +4,10 @@ import { extractUrlFeatures, scoreUrlFeatures } from '@/lib/url-analysis';
 import { callLLM } from '@/lib/openrouter';
 import { getDb } from '@/lib/mongodb';
 import { findSimilarDNA, normalizeTag } from '@/lib/dna';
-import {
-  buildFallbackOutput,
-} from '@/lib/policy-engine';
+import { buildFallbackOutput } from '@/lib/policy-engine';
 import { evaluateSecurityDecision } from '@/lib/security-decision';
 import { extractFileMetadataAndText, FileHeuristic } from '@/lib/file-analysis';
+import { getServerAuthSession } from '@/lib/auth/auth-options';
 
 // Lightweight in-memory rate limiter
 const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
@@ -16,7 +15,7 @@ const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const windowMs = 60 * 1000;
-  const maxRequests = 20;
+  const maxRequests = 30;
   const record = rateLimitCache.get(ip);
   if (!record || now > record.resetTime) {
     rateLimitCache.set(ip, { count: 1, resetTime: now + windowMs });
@@ -37,15 +36,22 @@ export async function POST(req: Request) {
       );
     }
 
+    // Authenticated Server Session — Derives True Identity
+    const session = await getServerAuthSession();
+    const userId = session?.user?.id || null;
+    const userEmail = session?.user?.email || null;
+
     const contentType = req.headers.get('content-type') ?? '';
     let type = 'message';
     let content = '';
+    let isDemo = false;
     let fileMetadata: Record<string, unknown> | null = null;
     let fileHeuristics: FileHeuristic[] = [];
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await req.formData();
       type = (formData.get('type') as string) ?? 'file';
+      isDemo = formData.get('isDemo') === 'true';
       const file = formData.get('file') as File | null;
 
       if (file) {
@@ -61,7 +67,7 @@ export async function POST(req: Request) {
         fileHeuristics = analysis.heuristics;
 
         if (!analysis.isSupportedForText) {
-          content = `[File type ${analysis.metadata.extension} received. Risk_Radar performed structural analysis only. No text was extracted.]`;
+          content = `[File type ${analysis.metadata.extension} received. ShieldSense performed structural analysis only. No text was extracted.]`;
         } else {
           content = analysis.text;
           if (analysis.isTruncated) {
@@ -72,9 +78,11 @@ export async function POST(req: Request) {
         content = (formData.get('content') as string) ?? '';
       }
     } else {
-      const body = (await req.json()) as { type?: string; content?: string };
+      const body = (await req.json()) as { type?: string; content?: string; isDemo?: boolean; [key: string]: unknown };
       type = body.type ?? 'message';
       content = body.content ?? '';
+      isDemo = Boolean(body.isDemo);
+      // Explicitly ignore any frontend-supplied userId: security requirement
     }
 
     // Determine if input is a URL even if sent under message radio
@@ -199,7 +207,7 @@ export async function POST(req: Request) {
       )
     );
 
-    // 5. Threat DNA History Comparison (Requires at least 2 meaningful tags)
+    // 5. Threat DNA History Comparison (User scoped + demo scans)
     let dnaOverlap: Array<{
       scanId: string;
       overlapPercent: number;
@@ -209,15 +217,18 @@ export async function POST(req: Request) {
 
     if (normalizedDnaTags.length >= 2) {
       try {
-        dnaOverlap = await findSimilarDNA(normalizedDnaTags);
+        dnaOverlap = await findSimilarDNA(normalizedDnaTags, userId);
       } catch (e: unknown) {
         console.error('[ShieldSense/DNA] Match query error:', (e as Error).message);
       }
     }
 
-    // 6. Persist to MongoDB
+    // 6. Persist to MongoDB with userId ownership
     const db = await getDb();
     const scanDoc = {
+      userId,
+      organizationId: null, // Ready for future multi-tenancy
+      isDemo,
       inputType: type,
       inputMetadata: fileMetadata ?? { truncatedContent: content.substring(0, 150) },
       riskScore: finalRisk,
@@ -244,7 +255,7 @@ export async function POST(req: Request) {
     if (finalRisk >= 60) {
       try {
         const { createIncidentFromScan } = await import('@/lib/incident-service');
-        await createIncidentFromScan({ ...scanDoc, _id: insertedId });
+        await createIncidentFromScan({ ...scanDoc, _id: insertedId }, userId);
       } catch (e) {
         console.error('[Incidents] Failed to create incident:', e);
       }
@@ -287,12 +298,13 @@ export async function POST(req: Request) {
       const { logAuditEvent } = await import('@/lib/audit-service');
       await logAuditEvent({
         eventType: finalRisk >= 60 ? 'threat_detected' : 'investigation_created',
-        actor: 'system',
+        actor: userEmail || userId || 'system',
+        userId,
         objectId: insertedId.toString(),
         objectType: 'scan',
         severity: finalRisk >= 80 ? 'critical' : finalRisk >= 60 ? 'warning' : 'info',
         result: 'success',
-        details: { riskScore: finalRisk, classification: finalClassification, intent: attackerIntent },
+        details: { riskScore: finalRisk, classification: finalClassification, intent: attackerIntent, isDemo },
       });
     } catch {
       // Audit log must never block response

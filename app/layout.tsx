@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: 'Antivirus detects threats. Risk_Radar investigates attacks.',
 };
 
+import AuthProvider from '@/components/AuthProvider';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -18,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         style={{ background: '#ECE6E2', color: '#111111' }}
       >
-        <AppShell>{children}</AppShell>
+        <AuthProvider>
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );

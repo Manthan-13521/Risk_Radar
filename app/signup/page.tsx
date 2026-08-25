@@ -15,6 +15,8 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [microsoftLoading, setMicrosoftLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -81,6 +83,16 @@ export default function SignupPage() {
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     signIn('google', { callbackUrl: '/dashboard' });
+  };
+
+  const handleMicrosoftLogin = () => {
+    setMicrosoftLoading(true);
+    signIn('azure-ad', { callbackUrl: '/dashboard' });
+  };
+
+  const handleGithubLogin = () => {
+    setGithubLoading(true);
+    signIn('github', { callbackUrl: '/dashboard' });
   };
 
   return (
@@ -254,6 +266,34 @@ export default function SignupPage() {
                 />
               </svg>
               <span>{googleLoading ? 'Connecting...' : 'Continue with Google'}</span>
+            </button>
+
+            {/* Microsoft OAuth Button */}
+            <button
+              type="button"
+              onClick={handleMicrosoftLogin}
+              disabled={microsoftLoading}
+              className="w-full py-2.5 px-4 rounded-xl border text-xs font-bold transition hover:bg-white/40 shadow-xs flex items-center justify-center gap-2.5"
+              style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.53 19.74c-3.1 0-5.76-2.22-5.76-5.24 0-3.21 2.66-5.24 5.76-5.24 3.1 0 5.76 2.03 5.76 5.24 0 3.1-2.66 5.24-5.76 5.24zm0-18.72c-7.22 0-13.09 5.87-13.09 13.09 0 7.21 5.87 13.09 13.09 13.09 7.21 0 13.09-5.88 13.09-13.09 0-7.22-5.88-13.09-13.09-13.09zm-1.08 8.87c-2.06 0-3.6-1.53-3.6-3.53 0-1.99 1.54-3.53 3.6-3.53 2.05 0 3.6 1.54 3.6 3.53 0 2-1.55 3.53-3.6 3.53zm-.12-5.38c-1.2 0-2.15.95-2.15 2.12 0 1.17.95 2.13 2.15 2.13 1.21 0 2.16-.96 2.16-2.13 0-1.16-.95-2.12-2.16-2.12zm10.99 8.83c-.76-.61-1.79-.89-2.76-.89h-1.53c.11-1.84.4-3.55.4-4.73 0-1.63-.4-2.89-1.18-3.93h1.68l.18-2h-2.44v-.06c-.39-.63-1.58-1.3-3.29-1.3-2.24 0-3.88 1.73-3.88 3.91 0 .85.18 1.75.55 2.51-.3-.02-1.02-.13-1.51-.13-1.75 0-3.1 1.4-3.1 3.32 0 2.11 1.63 3.68 3.68 3.68 1.79 0 3.23-1.14 3.63-2.71h2.52c-.29 2.54-2.37 4.43-5.15 4.43-3.56 0-6.15-2.7-6.15-6.35 0-3.65 2.59-6.35 6.15-6.35 2.1 0 3.78 1.12 4.7 2.79l2.18-2.14c-.98-1.69-2.73-3.07-4.88-3.07-4.77 0-8.32 3.87-8.32 8.81 0 4.94 3.55 8.81 8.32 8.81 2.5 0 4.31-1.59 5.03-3.88h-2.51z"/>
+              </svg>
+              <span>{microsoftLoading ? 'Connecting...' : 'Continue with Microsoft'}</span>
+            </button>
+
+            {/* GitHub OAuth Button */}
+            <button
+              type="button"
+              onClick={handleGithubLogin}
+              disabled={githubLoading}
+              className="w-full py-2.5 px-4 rounded-xl border text-xs font-bold transition hover:bg-white/40 shadow-xs flex items-center justify-center gap-2.5"
+              style={{ background: '#ECE6E2', borderColor: '#C4B5B0', color: '#111111' }}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#24292e">
+                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+              </svg>
+              <span>{githubLoading ? 'Connecting...' : 'Continue with GitHub'}</span>
             </button>
 
             <div className="mt-5 pt-4 border-t text-center text-xs font-medium" style={{ borderColor: '#C4B5B0', color: '#554B49' }}>

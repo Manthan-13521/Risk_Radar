@@ -1,11 +1,15 @@
 import { NextAuthOptions, getServerSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+import GitHubProvider from 'next-auth/providers/github';
+import AzureADProvider from 'next-auth/providers/azure-ad';
 import {
   findUserByEmail,
   verifyPassword,
   updateUserLastLogin,
   upsertGoogleUser,
+  upsertMicrosoftUser,
+  upsertGitHubUser,
   ensureMongoIndexes,
   normalizeEmail,
 } from './user-service';
@@ -29,6 +33,24 @@ export const authOptions: NextAuthOptions = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+    ...(process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET && process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER
+      ? [
+          AzureADProvider({
+            clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
+            clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+            issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
+            tenantId: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER.replace('https://login.microsoftonline.com/', '').replace('/v2.0', ''),
+          }),
+        ]
+      : []),
+    ...(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
+      ? [
+          GitHubProvider({
+            clientId: process.env.AUTH_GITHUB_ID,
+            clientSecret: process.env.AUTH_GITHUB_SECRET,
           }),
         ]
       : []),
@@ -91,6 +113,34 @@ export const authOptions: NextAuthOptions = {
           (user as unknown as Record<string, unknown>).role = dbUser.role || 'USER';
         } catch (e) {
           console.error('[Auth/Google] Upsert error:', (e as Error).message);
+          return false;
+        }
+      }
+      if (account?.provider === 'azure-ad' && user.email) {
+        try {
+          const dbUser = await upsertMicrosoftUser({
+            name: user.name || user.email.split('@')[0],
+            email: user.email,
+            image: user.image || null,
+          });
+          user.id = dbUser._id ? dbUser._id.toString() : '';
+          (user as unknown as Record<string, unknown>).role = dbUser.role || 'USER';
+        } catch (e) {
+          console.error('[Auth/Microsoft] Upsert error:', (e as Error).message);
+          return false;
+        }
+      }
+      if (account?.provider === 'github' && user.email) {
+        try {
+          const dbUser = await upsertGitHubUser({
+            name: user.name || user.email.split('@')[0],
+            email: user.email,
+            image: user.image || null,
+          });
+          user.id = dbUser._id ? dbUser._id.toString() : '';
+          (user as unknown as Record<string, unknown>).role = dbUser.role || 'USER';
+        } catch (e) {
+          console.error('[Auth/GitHub] Upsert error:', (e as Error).message);
           return false;
         }
       }

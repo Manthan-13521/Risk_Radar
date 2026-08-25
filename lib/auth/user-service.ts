@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 
 export type UserRole = 'USER' | 'ADMIN';
-export type AuthProvider = 'credentials' | 'google';
+export type AuthProvider = 'credentials' | 'google' | 'azure-ad' | 'github';
 
 export interface User {
   _id?: ObjectId;
@@ -127,6 +127,98 @@ export async function upsertGoogleUser(params: {
     email: normalizedEmail,
     image: params.image || null,
     provider: 'google',
+    role: 'USER',
+    createdAt: now,
+    updatedAt: now,
+    lastLoginAt: now,
+  };
+}
+
+// Ultra-fast single-query atomic upsert for Microsoft (Azure AD) login
+export async function upsertMicrosoftUser(params: {
+  name: string;
+  email: string;
+  image?: string | null;
+}): Promise<User> {
+  const db = await getDb();
+  const normalizedEmail = normalizeEmail(params.email);
+  const now = new Date();
+
+  const res = await db.collection<User>('users').findOneAndUpdate(
+    { email: normalizedEmail },
+    {
+      $set: {
+        lastLoginAt: now,
+        updatedAt: now,
+        ...(params.image ? { image: params.image } : {}),
+        ...(params.name ? { name: params.name } : {}),
+      },
+      $setOnInsert: {
+        email: normalizedEmail,
+        provider: 'azure-ad',
+        role: 'USER',
+        organizationId: null,
+        createdAt: now,
+      },
+    },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  if (res) {
+    return res as unknown as User;
+  }
+
+  return {
+    name: params.name || normalizedEmail.split('@')[0],
+    email: normalizedEmail,
+    image: params.image || null,
+    provider: 'azure-ad',
+    role: 'USER',
+    createdAt: now,
+    updatedAt: now,
+    lastLoginAt: now,
+  };
+}
+
+// Ultra-fast single-query atomic upsert for GitHub login
+export async function upsertGitHubUser(params: {
+  name: string;
+  email: string;
+  image?: string | null;
+}): Promise<User> {
+  const db = await getDb();
+  const normalizedEmail = normalizeEmail(params.email);
+  const now = new Date();
+
+  const res = await db.collection<User>('users').findOneAndUpdate(
+    { email: normalizedEmail },
+    {
+      $set: {
+        lastLoginAt: now,
+        updatedAt: now,
+        ...(params.image ? { image: params.image } : {}),
+        ...(params.name ? { name: params.name } : {}),
+      },
+      $setOnInsert: {
+        email: normalizedEmail,
+        provider: 'github',
+        role: 'USER',
+        organizationId: null,
+        createdAt: now,
+      },
+    },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  if (res) {
+    return res as unknown as User;
+  }
+
+  return {
+    name: params.name || normalizedEmail.split('@')[0],
+    email: normalizedEmail,
+    image: params.image || null,
+    provider: 'github',
     role: 'USER',
     createdAt: now,
     updatedAt: now,
